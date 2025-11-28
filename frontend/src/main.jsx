@@ -9,8 +9,8 @@ import "./index.css";
 // Pages
 import HomePage from "./pages/Home/Index.jsx";
 // later you can add your other pages here, for example:
-// import Login from "./pages/Login/Login.jsx";
-// import Register from "./pages/Register/Register.jsx";
+import Login from "./pages/LoginPage/LoginPage.jsx";
+import Register from "./pages/RegistrationPage/RegistrationPage.jsx";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
@@ -19,9 +19,9 @@ createRoot(document.getElementById("root")).render(
         {/* HOME */}
         <Route path="/" element={<HomePage />} />
 
-        {/* uncomment / add more when those files exist */}
-        {/* <Route path="/login" element={<Login />} /> */}
-        {/* <Route path="/register" element={<Register />} /> */}
+        {/* AUTH ROUTES - Now active */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>

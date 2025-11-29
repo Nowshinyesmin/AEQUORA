@@ -1,6 +1,10 @@
 from django.urls import path
-from . import views
+from .views import RegisterView, CustomLoginView
 
 urlpatterns = [
-    path("ping/", views.ping, name="ping"),
+    # Custom Registration
+    path('register/', RegisterView.as_view(), name='register'),
+    
+    # Custom Login (Replaces Djoser for now)
+    path('login/', CustomLoginView.as_view(), name='custom_login'),
 ]

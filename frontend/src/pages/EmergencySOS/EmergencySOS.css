@@ -1,0 +1,332 @@
+/* frontend/src/pages/EmergencySOS/EmergencySOS.css */
+
+/* Global Reset for this page context */
+* {
+  box-sizing: border-box;
+}
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Sidebar Styles (Fixed Position) --- */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+.sidebar-brand {
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.user-profile-section {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.user-name-display {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-display {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.sidebar-nav {
+  padding: 1.5rem 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  width: 100%;
+}
+
+.nav-link-custom:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+/* Default Active State */
+.nav-link-custom.active {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+}
+
+/* --- Special Red Styling for SOS Link --- */
+.nav-link-custom.text-danger-custom {
+  color: #dc2626; /* Always red text */
+}
+
+.nav-link-custom.text-danger-custom.active {
+  background-color: #fef2f2; /* Light red background */
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  background-color: #ffffff;
+  margin-top: auto;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  justify-content: flex-start;
+}
+
+.logout-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+/* --- Main Content Area --- */
+.main-content {
+  margin-left: 260px; /* Offset for sidebar */
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px); /* Fill remaining width */
+  min-height: 100vh;
+}
+
+/* --- Header Section (Centered) --- */
+.sos-page-header {
+  text-align: center;
+  margin-bottom: 2.5rem;
+}
+
+.header-icon-wrapper {
+  background-color: #fef2f2; /* Light red circle */
+  color: #dc2626; /* Red Icon */
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem auto; /* Center horizontally */
+}
+
+.sos-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.sos-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* --- Emergency Form Card --- */
+.emergency-card {
+  background-color: #ffffff;
+  border: 1px solid #fecaca; /* Red border */
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  max-width: 700px; /* Limits width */
+  margin-left: auto; /* Centers card */
+  margin-right: auto; /* Centers card */
+}
+
+.emergency-card-header {
+  background-color: #fef2f2; /* Very light red header */
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #fecaca;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #dc2626;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.emergency-card-body {
+  padding: 2rem;
+}
+
+/* Form Groups */
+.form-group-custom {
+  margin-bottom: 1.25rem;
+}
+
+.form-label-custom {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 0.5rem;
+}
+
+.form-control-custom {
+  width: 100%;
+  padding: 0.625rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  color: #111827;
+  background-color: #fff;
+}
+
+.form-control-custom:focus {
+  border-color: #dc2626; /* Red focus */
+  outline: none;
+  box-shadow: 0 0 0 1px #dc2626;
+}
+
+.form-helper-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+/* Warning Box */
+.warning-box {
+  background-color: #fffbeb; /* Yellow-50 */
+  border: 1px solid #fde68a; /* Yellow-200 */
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  color: #92400e; /* Yellow-800 */
+  font-size: 0.85rem;
+  line-height: 1.4;
+}
+
+/* Submit Button */
+.btn-emergency-submit {
+  width: 100%;
+  background-color: #dc2626; /* Red */
+  color: #ffffff;
+  border: none;
+  padding: 0.75rem;
+  font-weight: 700;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background-color 0.2s;
+  cursor: pointer;
+}
+
+.btn-emergency-submit:hover {
+  background-color: #b91c1c; /* Darker red */
+}
+
+/* --- Contacts Card --- */
+.contacts-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.contacts-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.contact-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.contact-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.contact-info h5 {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.contact-info p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.contact-number {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+}

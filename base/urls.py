@@ -6,5 +6,5 @@ urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
     
     # Custom Login (Replaces Djoser for now)
-    path('login/', CustomLoginView.as_view(), name='custom_login'),
+    path('login/', CustomLoginView.as_view(), name='login'),
 ]

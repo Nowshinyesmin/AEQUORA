@@ -1,14 +1,12 @@
-// frontend/src/pages/LoginPage.jsx
+// frontend/src/pages/LoginPage.jsx 
 
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Building2, Loader2 } from 'lucide-react';
 import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 
-// Import the specific CSS file
 import './LoginPage.css';
 import { api } from "../../api/client";
-
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,8 +20,9 @@ function LoginPage() {
     setError('');
     setLoading(true);
 
+    // 🔹 Backend now expects "email" + "password"
     const payload = {
-      username: email, // backend expects "username" field (email string)
+      email: email,
       password: password,
     };
 
@@ -32,19 +31,19 @@ function LoginPage() {
       const response = await api.post('login/', payload);
       const data = response.data;
 
-      // Save token
       if (data.auth_token) {
         localStorage.setItem('token', data.auth_token);
       }
 
-      // TODO: you can inspect data.role and redirect differently if needed
+      // redirect (you can later branch by role if needed)
       navigate('/resident/dashboard');
     } catch (err) {
       if (err.response && err.response.data) {
         const data = err.response.data;
-        const errorMessage = data.non_field_errors
-          ? data.non_field_errors[0]
-          : 'Invalid email or password.';
+        // Backend sends: { "error": "Invalid email or password." }
+        const errorMessage =
+          data.error ||
+          (data.non_field_errors ? data.non_field_errors[0] : 'Invalid email or password.');
         setError(errorMessage);
       } else {
         setError('Network Error: Could not connect to the server. Is the backend running?');
@@ -78,7 +77,7 @@ function LoginPage() {
             {/* Login Form */}
             <Form onSubmit={handleSubmit}>
               {/* Email Group */}
-              <Form.Group className="mb-3" controlId="username">
+              <Form.Group className="mb-3" controlId="email">
                 <Form.Label className="form-label-custom">Email</Form.Label>
                 <Form.Control
                   type="email"

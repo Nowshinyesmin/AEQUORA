@@ -12,6 +12,7 @@
   font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
 }
 
+/* Card */
 .auth-card {
   border: 1px solid #e0e0e0;
   border-radius: 16px; /* Slightly rounder for auth cards */
@@ -20,7 +21,7 @@
   overflow: hidden;
 }
 
-/* Icon Wrapper - Matches Index.css style */
+/* Icon Wrapper */
 .auth-icon-wrapper {
   background-color: #111827;
   color: #ffffff;
@@ -49,49 +50,4 @@
   font-weight: 700;
   color: #6b7280; /* text-secondary */
   margin-bottom: 0.25rem;
-}
-
-.form-control-custom {
-  background-color: #f3f4f6; /* bg-light equivalent */
-  border: 1px solid #f3f4f6;
-  padding-top: 0.625rem; /* py-2.5 */
-  padding-bottom: 0.625rem;
-  font-size: 0.95rem;
-  color: #111827;
-}
-
-.form-control-custom:focus {
-  background-color: #ffffff;
-  border-color: #111827;
-  box-shadow: none;
-}
-
-/* Buttons */
-.btn-auth {
-  background-color: #111827;
-  border: none;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  font-weight: 700;
-  border-radius: 6px;
-}
-
-.btn-auth:hover {
-  background-color: #000000;
-}
-
-.btn-auth:disabled {
-  background-color: #374151;
-}
-
-/* Links */
-.auth-link {
-  color: #111827;
-  font-weight: 700;
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-.auth-link:hover {
-  color: #2563eb; /* Primary blue on hover */
 }

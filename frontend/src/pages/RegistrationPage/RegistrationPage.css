@@ -1,15 +1,15 @@
-/* frontend/src/pages/RegisterPage.css */
+/* frontend/src/pages/RegistrationPage/RegistrationPage.css */
 
 .register-root {
-  background-color: #f9fafb; /* Matches Index.css background */
+  background-color: #f9fafb;
   min-height: 100vh;
   width: 100%;
   display: flex;
-  align-items: center;
   justify-content: center;
+  /* Allow scrolling by removing fixed alignment if content is too tall */
   padding-top: 3rem;
   padding-bottom: 3rem;
-  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
 .register-card {
@@ -19,11 +19,14 @@
   background-color: #ffffff;
 }
 
-/* Icon Wrapper */
-.register-icon-wrapper {
+/* Header Icons and Text */
+
+/* Old name kept in case something else uses it */
+.register-icon-wrapper,
+.register-icon {           /* <--- .register-icon added to match JSX */
   background-color: #111827;
   color: #ffffff;
-  width: 56px; /* Slightly smaller than login icon */
+  width: 56px;
   height: 56px;
   border-radius: 999px;
   display: inline-flex;
@@ -35,60 +38,83 @@
 .register-title {
   color: #111827;
   font-weight: 700;
+  font-size: 1.5rem;
 }
 
 .register-subtitle {
   color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Section Headers */
+.section-header {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 1rem;
+}
+
+.subsection-header {
   font-size: 0.9rem;
+  font-weight: 600;
+  color: #374151;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-/* Input Fields */
+/* Separator Line */
+.separator {
+  border-top: 1px solid #e5e7eb;
+  opacity: 1;
+}
+
+/* Inputs */
 .register-label {
-  font-size: 0.875rem; /* small */
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #6b7280; /* text-secondary */
-  margin-bottom: 0.25rem;
+  color: #374151;
+  margin-bottom: 0.35rem;
 }
 
-.register-input {
-  background-color: #f3f4f6; /* bg-light */
-  border: 1px solid #f3f4f6;
-  padding-top: 0.5rem; /* py-2 */
-  padding-bottom: 0.5rem;
+.register-input,
+.register-select {
+  background-color: #ffffff; /* White input (matches screenshot) */
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.95rem;
   color: #111827;
 }
 
-.register-input:focus {
+.register-input:focus,
+.register-select:focus {
   background-color: #ffffff;
   border-color: #111827;
   box-shadow: none;
+  outline: 1px solid #111827;
 }
 
-.register-select {
-  background-color: #f3f4f6;
-  border: 1px solid #f3f4f6;
-  padding-top: 0.5rem;
-  padding-bottom: 0.5rem;
-  color: #111827;
-  cursor: pointer;
-}
-
-.register-select:focus {
-  border-color: #111827;
-  box-shadow: none;
+.register-input::placeholder {
+  color: #9ca3af;
+  font-size: 0.9rem;
 }
 
 /* Button */
-.btn-register {
+
+/* Old class name kept for safety */
+.btn-register,
+.register-submit-btn {     /* <--- .register-submit-btn added to match JSX */
   background-color: #111827;
   border: none;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
+  padding-top: 0.75rem;
+  padding-bottom: 0.75rem;
   font-weight: 700;
   border-radius: 6px;
+  font-size: 0.95rem;
 }
 
-.btn-register:hover {
+.btn-register:hover,
+.register-submit-btn:hover {
   background-color: #000000;
 }
 
@@ -102,4 +128,9 @@
 
 .register-link:hover {
   color: #2563eb;
+}
+
+/* Utility – used on Alerts text */
+.text-sm {
+  font-size: 0.875rem;
 }

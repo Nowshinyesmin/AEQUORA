@@ -339,7 +339,7 @@ class RegisterView(APIView):
 
             lastname=data["last_name"],
 
-            password=data["password"],  # your custom table copy
+            password=auth_user.password,  # your custom table copy
 
             role=data["role"],
 

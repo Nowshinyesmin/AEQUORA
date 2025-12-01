@@ -8,6 +8,11 @@ import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
 import './LoginPage.css';
 import { api } from "../../api/client";
 
+// change these if your route names are different
+const RESIDENT_DASHBOARD_PATH = "/resident/dashboard";
+const AUTHORITY_DASHBOARD_PATH = "/authority/dashboard";
+const SERVICE_PROVIDER_DASHBOARD_PATH = "/serviceprovider/dashboard";
+
 function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -20,36 +25,38 @@ function LoginPage() {
     setError('');
     setLoading(true);
 
-    // 🔹 Backend now expects "email" + "password"
     const payload = {
       email: email,
       password: password,
     };
 
     try {
-      // POST http://127.0.0.1:8000/api/login/
-    const response = await api.post('login/', payload);
+      const response = await api.post('login/', payload);
       const data = response.data;
 
+      // save token + role
       if (data.auth_token) {
         localStorage.setItem('token', data.auth_token);
       }
-
-      // Redirect based on role returned from backend
-      const role = (data.role || '').toLowerCase();
-      if (role === 'resident') {
-        navigate('/resident/dashboard');
-      } else if (role.includes('service')) {
-        navigate('/provider/dashboard'); // create this route if not present
-      } else if (role === 'authority') {
-        navigate('/authority/dashboard'); // create this route if not present
-      } else {
-        navigate('/'); // fallback
+      if (data.role) {
+        localStorage.setItem('role', data.role);
       }
-    }  catch (err) {
+
+      // redirect based on role
+      let targetPath = RESIDENT_DASHBOARD_PATH;
+
+      if (data.role === 'Resident') {
+        targetPath = RESIDENT_DASHBOARD_PATH;
+      } else if (data.role === 'ServiceProvider') {
+        targetPath = SERVICE_PROVIDER_DASHBOARD_PATH;
+      } else if (data.role === 'Authority') {
+        targetPath = AUTHORITY_DASHBOARD_PATH;
+      }
+
+      navigate(targetPath);
+    } catch (err) {
       if (err.response && err.response.data) {
         const data = err.response.data;
-        // Backend sends: { "error": "Invalid email or password." }
         const errorMessage =
           data.error ||
           (data.non_field_errors ? data.non_field_errors[0] : 'Invalid email or password.');
@@ -85,7 +92,6 @@ function LoginPage() {
 
             {/* Login Form */}
             <Form onSubmit={handleSubmit}>
-              {/* Email Group */}
               <Form.Group className="mb-3" controlId="email">
                 <Form.Label className="form-label-custom">Email</Form.Label>
                 <Form.Control
@@ -98,7 +104,6 @@ function LoginPage() {
                 />
               </Form.Group>
 
-              {/* Password Group */}
               <Form.Group className="mb-4" controlId="password">
                 <Form.Label className="form-label-custom">Password</Form.Label>
                 <Form.Control
@@ -111,7 +116,6 @@ function LoginPage() {
                 />
               </Form.Group>
 
-              {/* Sign In Button */}
               <Button
                 variant="dark"
                 type="submit"
@@ -129,7 +133,6 @@ function LoginPage() {
               </Button>
             </Form>
 
-            {/* Footer */}
             <div className="text-center mt-4 pt-3">
               <p className="text-secondary small mb-0">
                 Don't have an account?{' '}

@@ -20,7 +20,10 @@
 }
 
 /* Header Icons and Text */
-.register-icon-wrapper {
+
+/* Old name kept in case something else uses it */
+.register-icon-wrapper,
+.register-icon {           /* <--- .register-icon added to match JSX */
   background-color: #111827;
   color: #ffffff;
   width: 56px;
@@ -75,7 +78,7 @@
 
 .register-input,
 .register-select {
-  background-color: #ffffff; /* Changed to white based on screenshot */
+  background-color: #ffffff; /* White input (matches screenshot) */
   border: 1px solid #d1d5db;
   border-radius: 6px;
   padding: 0.625rem 0.75rem;
@@ -97,7 +100,10 @@
 }
 
 /* Button */
-.btn-register {
+
+/* Old class name kept for safety */
+.btn-register,
+.register-submit-btn {     /* <--- .register-submit-btn added to match JSX */
   background-color: #111827;
   border: none;
   padding-top: 0.75rem;
@@ -107,7 +113,8 @@
   font-size: 0.95rem;
 }
 
-.btn-register:hover {
+.btn-register:hover,
+.register-submit-btn:hover {
   background-color: #000000;
 }
 
@@ -121,4 +128,9 @@
 
 .register-link:hover {
   color: #2563eb;
+}
+
+/* Utility – used on Alerts text */
+.text-sm {
+  font-size: 0.875rem;
 }

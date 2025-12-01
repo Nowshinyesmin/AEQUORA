@@ -32,7 +32,7 @@ INSTALLED_APPS = [
     'corsheaders',
 
     # Your App
-    'base',     # <-- Changed from 'api' to 'base'
+    'base', 
 ]
 
 MIDDLEWARE = [
@@ -71,7 +71,7 @@ WSGI_APPLICATION = 'AEQUORA.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'aequora_db',   # your DB name from phpMyAdmin
+        'NAME': 'aequora_db',   # your DB name
         'USER': 'root',         # XAMPP default user
         'PASSWORD': '',         # empty password
         'HOST': '127.0.0.1',    # local MySQL
@@ -81,8 +81,6 @@ DATABASES = {
         }
     }
 }
-
-
 
 # --------------------------
 # PASSWORD VALIDATION
@@ -112,30 +110,37 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:3000",
 ]
 
+# Allow any origin (Required for some dev environments)
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
 # --------------------------
-# REST FRAMEWORK
-# --------------------------
-REST_FRAMEWORK = {
-    'DEFAULT_AUTHENTICATION_CLASSES': (
-        'rest_framework.authentication.TokenAuthentication',
-    ),
-}
-
-# --------------------------
 # DJOSER CONFIGURATION
-# FIXED to use base.serializers
 # --------------------------
 DJOSER = {
     'USER_ID_FIELD': 'username',
     'LOGIN_FIELD': 'email',
     'SERIALIZERS': {
-        # !!! IMPORTANT !!!
-        # You DO NOT have api.serializers in your project anymore.
-        # So these MUST point to base.serializers.
         'user_create': 'base.serializers.UserCreateSerializer',
         'current_user': 'base.serializers.UserSerializer',
     },
 }
+
+# --------------------------
+# REST FRAMEWORK
+# --------------------------
+# This tells Django to check for the 'Authorization: Token ...' header
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
+# In AEQUORA/settings.py (Add to the bottom)
+
+# Media files (User uploads)
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

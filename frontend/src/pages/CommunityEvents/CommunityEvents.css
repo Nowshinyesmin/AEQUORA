@@ -164,4 +164,58 @@
   color: #6b7280;
   font-size: 1.1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+
+}
+
+
+/* Add this to CommunityEvents.css */
+
+.event-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Green Styling for Participating */
+.participating-card {
+  background-color: #ecfdf5; /* Light green background */
+  border: 2px solid #10b981; /* Green border */
+}
+
+.participation-badge {
+  background-color: #10b981;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Push content down slightly if badge exists */
+.participating-card .event-card-body {
+  padding-top: 2rem !important;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;  /* <--- Add this line to satisfy the warning */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }

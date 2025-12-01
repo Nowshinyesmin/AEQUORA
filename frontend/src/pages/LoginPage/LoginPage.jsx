@@ -28,16 +28,25 @@ function LoginPage() {
 
     try {
       // POST http://127.0.0.1:8000/api/login/
-      const response = await api.post('login/', payload);
+    const response = await api.post('login/', payload);
       const data = response.data;
 
       if (data.auth_token) {
         localStorage.setItem('token', data.auth_token);
       }
 
-      // redirect (you can later branch by role if needed)
-      navigate('/resident/dashboard');
-    } catch (err) {
+      // Redirect based on role returned from backend
+      const role = (data.role || '').toLowerCase();
+      if (role === 'resident') {
+        navigate('/resident/dashboard');
+      } else if (role.includes('service')) {
+        navigate('/provider/dashboard'); // create this route if not present
+      } else if (role === 'authority') {
+        navigate('/authority/dashboard'); // create this route if not present
+      } else {
+        navigate('/'); // fallback
+      }
+    }  catch (err) {
       if (err.response && err.response.data) {
         const data = err.response.data;
         // Backend sends: { "error": "Invalid email or password." }

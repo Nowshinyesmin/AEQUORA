@@ -1,0 +1,225 @@
+/* frontend/src/pages/AuthorityDashboard/ManageIssues.css */
+
+/* --- Reuse Layout Variables/Base (Matching AuthorityDashboard) --- */
+.manage-issues-root {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Sidebar (Replicated for consistency) */
+.manage-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+/* Main Content Area */
+.manage-main {
+  margin-left: 260px;
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* --- Filter Section --- */
+.filters-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  margin-bottom: 2rem;
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  align-items: flex-end;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 200px;
+}
+
+.filter-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.filter-select {
+  padding: 0.6rem;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background-color: #fff;
+  color: #111827;
+  font-size: 0.95rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.filter-select:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* --- Issues Table --- */
+.issues-table-container {
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  overflow: hidden; /* For rounded corners on table */
+}
+
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.custom-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.custom-table thead {
+  background-color: #f3f4f6;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.custom-table th {
+  padding: 1rem 1.5rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  color: #6b7280;
+  letter-spacing: 0.05em;
+}
+
+.custom-table td {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  font-size: 0.95rem;
+  vertical-align: middle;
+}
+
+.custom-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.custom-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* --- Badges & Status Styles --- */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+/* Urgency Colors */
+.urgency-high {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.urgency-medium {
+  background-color: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
+}
+
+.urgency-low {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
+}
+
+/* Status Colors (for text/selects) */
+.status-select {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  outline: none;
+}
+
+.status-pending {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.status-inprogress {
+  background-color: #eff6ff;
+  color: #2563eb;
+  border-color: #bfdbfe;
+}
+
+.status-resolved {
+  background-color: #f0fdf4;
+  color: #16a34a;
+  border-color: #bbf7d0;
+}
+
+/* Assign Dropdown */
+.assign-select {
+  padding: 0.4rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background-color: white;
+  color: #4b5563;
+  font-size: 0.9rem;
+  width: 100%;
+  min-width: 140px;
+}
+
+.assign-select:focus {
+  border-color: #2563eb;
+}
+
+/* Empty State */
+.no-issues {
+  padding: 3rem;
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}

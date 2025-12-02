@@ -1,0 +1,171 @@
+/* frontend/src/pages/AuthorityEmergency/AuthorityEmergency.css */
+
+/* --- Layout Structure (Matches AuthorityDashboard) --- */
+.authority-emergency-root {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+  
+  /* --- Sidebar Styles --- */
+  .emergency-sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    height: 100vh;
+    z-index: 1000;
+  }
+  
+  .sidebar-brand {
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #111827;
+  }
+  
+  .user-profile-section {
+    padding: 0 1.5rem 1.5rem 1.5rem;
+    border-bottom: 1px solid #f3f4f6;
+  }
+  
+  .user-name-display { font-weight: 700; color: #111827; }
+  .user-role-display { font-size: 0.8rem; color: #6b7280; }
+  
+  .sidebar-nav {
+    padding: 1.5rem 1rem;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .nav-link-custom {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+  
+  .nav-link-custom:hover { background-color: #f9fafb; color: #111827; }
+  .nav-icon { margin-right: 0.75rem; }
+  
+  .sidebar-footer { padding: 1.5rem; border-top: 1px solid #f3f4f6; margin-top: auto; }
+  .logout-btn {
+    width: 100%; display: flex; align-items: center; padding: 0.75rem;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 8px;
+  }
+  
+  /* Active State for this page specifically */
+  .nav-link-custom.active-danger {
+    background-color: #fef2f2;
+    color: #dc2626;
+    font-weight: 600;
+    border-left: 4px solid #dc2626;
+  }
+  
+  /* --- Main Content --- */
+  .emergency-main {
+    margin-left: 260px;
+    padding: 2.5rem;
+    width: calc(100% - 260px);
+  }
+  
+  .emergency-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #e5e7eb;
+    padding-bottom: 1rem;
+  }
+  
+  .page-title { font-weight: 800; margin-bottom: 0.2rem; }
+  .page-subtitle { color: #6b7280; margin: 0; }
+  
+  /* Live Indicator Pulse */
+  .live-indicator {
+    background-color: #fee2e2;
+    color: #991b1b;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .blink-dot {
+    width: 10px;
+    height: 10px;
+    background-color: #dc2626;
+    border-radius: 50%;
+    animation: blink 1.5s infinite;
+  }
+  
+  @keyframes blink {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+    100% { opacity: 1; transform: scale(1); }
+  }
+  
+  /* --- SOS Card Styles --- */
+  .sos-card {
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.15);
+    transition: transform 0.2s;
+  }
+  
+  .border-danger-glow {
+    border: 1px solid #fecaca;
+    animation: pulse-border 2s infinite;
+  }
+  
+  @keyframes pulse-border {
+    0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); }
+  }
+  
+  .sos-info-row {
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  .sos-description-box {
+    background-color: #f9fafb;
+    padding: 0.75rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 1rem;
+    border-left: 3px solid #d1d5db;
+  }
+  
+  .safe-state-card {
+    text-align: center;
+    padding: 4rem;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px dashed #d1d5db;
+  }
+  
+  .section-label {
+    font-weight: 700;
+    color: #374151;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+    margin-bottom: 1rem;
+  }

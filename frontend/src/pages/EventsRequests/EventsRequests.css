@@ -1,0 +1,221 @@
+/* frontend/src/pages/EventsRequests/EventsRequests.css */
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Reusing Sidebar Styles --- */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  height: 100vh;
+  left: 0;
+  top: 0;
+  z-index: 10;
+  overflow-y: auto;
+}
+
+.sidebar-brand {
+  padding: 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+}
+
+.user-profile-section {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.user-name-display {
+  font-weight: 700;
+  color: #111827;
+}
+
+.user-role-display {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-nav {
+  padding: 1.5rem 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.nav-link-custom:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.nav-link-custom.active {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  margin-top: auto;
+  border-top: 1px solid #f3f4f6;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  color: #374151;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* --- Main Content --- */
+.main-content {
+  margin-left: 260px;
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+}
+
+.page-title h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+/* --- Tab Navigation --- */
+.tabs-container {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 1rem;
+  font-weight: 600;
+  color: #6b7280;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+}
+
+.tab-btn.active {
+  color: #111827;
+  border-bottom-color: #111827;
+}
+
+.tab-badge {
+  background-color: #ef4444;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-left: 8px;
+}
+
+/* --- Cards --- */
+.event-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.event-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.event-card-body {
+  padding: 1.5rem;
+  flex-grow: 1;
+}
+
+.event-card-footer {
+  padding: 1rem 1.5rem;
+  background-color: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+  display: flex;
+  gap: 10px;
+}
+
+/* --- Request Action Buttons --- */
+.btn-approve {
+  flex: 1;
+  background-color: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-reject {
+  flex: 1;
+  background-color: white;
+  color: #ef4444;
+  border: 1px solid #ef4444;
+  padding: 0.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.btn-reject:hover {
+  background-color: #fef2f2;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem;
+  color: #6b7280;
+  background: white;
+  border-radius: 12px;
+  border: 1px dashed #e5e7eb;
+}

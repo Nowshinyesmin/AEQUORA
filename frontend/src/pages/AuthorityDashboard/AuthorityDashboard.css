@@ -1,0 +1,339 @@
+frontend/src/pages/AuthorityDashboard/AuthorityDashboard.css */
+
+
+.dashboard-root {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+
+/* --- Sidebar Styles --- */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+
+/* Custom Scrollbar for Sidebar */
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+
+.sidebar-brand {
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+  display: flex;
+  align-items: center;
+}
+
+
+/* Admin Badge Styling */
+.admin-badge {
+  background-color: #e5e7eb;
+  color: #374151;
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+
+.user-profile-section {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+
+.user-name-display {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+.user-role-display {
+  font-size: 0.8rem;
+  color: #2563eb; /* Distinct Blue for Authority Role */
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+
+/* Navigation Links */
+.sidebar-nav {
+  padding: 1.5rem 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+
+.nav-link-custom:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+
+.nav-link-custom.active {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
+}
+
+
+.nav-icon {
+  margin-right: 0.75rem;
+  min-width: 20px;
+}
+
+
+/* Special styling for SOS Link */
+.text-danger-custom {
+  color: #dc2626;
+}
+.text-danger-custom:hover {
+  background-color: #fef2f2;
+  color: #b91c1c;
+}
+
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  background-color: #ffffff;
+  margin-top: auto;
+}
+
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  justify-content: flex-start;
+}
+
+
+.logout-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+
+/* --- Main Content Area --- */
+.dashboard-main {
+  margin-left: 260px; /* Must match sidebar width */
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+}
+
+
+.page-header-mb {
+  margin-bottom: 2rem;
+}
+
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+
+/* Stats Cards */
+.stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  height: 100%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+
+/* Colored Left Borders for quick status ID */
+.border-l-blue { border-left: 4px solid #2563eb; }
+.border-l-green { border-left: 4px solid #16a34a; }
+.border-l-orange { border-left: 4px solid #f97316; }
+
+
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+
+.stat-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+}
+
+
+.stat-value {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+  margin-bottom: 0.5rem;
+}
+
+
+.stat-subtext {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+
+/* Dashboard Content Cards */
+.dashboard-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  border: none;
+  height: 100%;
+}
+
+
+.card-title-custom {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+
+/* Chart Visuals (CSS Only implementation) */
+.chart-container {
+  height: 200px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 1rem;
+}
+
+
+.chart-bar-wrapper {
+  flex: 1;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+}
+
+
+.chart-bar {
+  width: 100%;
+  background-color: #111827;
+  border-radius: 4px 4px 0 0;
+  opacity: 0.8;
+  transition: height 0.3s;
+}
+
+
+.chart-bar:hover {
+  opacity: 1;
+  background-color: #2563eb;
+}
+
+
+/* Satisfaction Score Circle */
+.satisfaction-circle {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  border: 10px solid #f3f4f6;
+  border-top-color: #16a34a; /* Green top */
+  border-right-color: #16a34a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+
+.satisfaction-circle .score {
+  font-size: 2.5rem;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+
+
+.satisfaction-circle .total {
+  font-size: 0.8rem;
+  color: #6b7280;
+}

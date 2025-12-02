@@ -1,0 +1,145 @@
+/* frontend/src/pages/AnalyticsReports/AnalyticsReports.css */
+
+/* --- Layout Base (Matches ManageIssues.css) --- */
+.analytics-root {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Sidebar */
+.analytics-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+/* Main Content */
+.analytics-main {
+  margin-left: 260px;
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.radius-12 {
+  border-radius: 12px;
+}
+
+/* --- Metric Cards --- */
+.metric-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  transition: transform 0.2s;
+}
+
+.metric-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.metric-icon-bg {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bg-light-blue { background-color: #eff6ff; }
+.bg-light-green { background-color: #f0fdf4; }
+.bg-light-purple { background-color: #f3e8ff; }
+.text-purple { color: #9333ea; }
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #6b7280;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.metric-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.2;
+}
+
+/* --- Charts Area --- */
+.empty-state-chart {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  background-color: #f9fafb;
+  border-radius: 8px;
+  border: 2px dashed #e5e7eb;
+}
+
+/* Top Areas List */
+.area-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.area-item:last-child {
+  border-bottom: none;
+}
+
+.area-rank {
+  width: 32px;
+  height: 32px;
+  background-color: #111827;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 0.9rem;
+  margin-right: 1rem;
+}
+
+/* Print styles */
+@media print {
+  .analytics-sidebar, .btn {
+    display: none !important;
+  }
+  .analytics-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 0;
+  }
+}

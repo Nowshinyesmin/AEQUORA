@@ -9,10 +9,26 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./index.css";
 
-// --- Pages ---
-import HomePage from "./pages/Home/Index.jsx";
-import Login from "./pages/LoginPage/LoginPage.jsx";
-import Register from "./pages/RegistrationPage/RegistrationPage.jsx";
+// --- Public Pages ---
+import HomePage from "./pages/Home/Index";
+import Login from "./pages/LoginPage/LoginPage";
+import Register from "./pages/RegistrationPage/RegistrationPage";
+
+// --- Resident Pages (Existing Imports) ---
+// NOTE: Removed .jsx extension to prevent import conflicts
+//import ResidentDashboard from "./pages/ResidentDashboard/ResidentDashboard";
+//import IssueReports from "./pages/IssueReports/IssueReports";
+//import BookService from "./pages/BookService/BookService";
+//import CommunityEvents from "./pages/CommunityEvents/CommunityEvents";
+//import EmergencySOS from "./pages/EmergencySOS/EmergencySOS";
+//import ResidentProfileSettings from "./pages/ResidentProfileSettings/ResidentProfileSettings";
+
+// --- Service Provider Pages (NEW Imports - Fix applied by removing .jsx) ---
+import ServiceProviderDashboard from "./pages/ServiceProviderDashboard/ServiceProviderDashboard"; 
+import ManageBookings from "./pages/ManageBookings/ManageBookings";
+import ManageServices from "./pages/ManageServices/ManageServices";
+import CustomerReviews from "./pages/CustomerReviews/CustomerReviews";
+import ServiceProviderProfileSettings from "./pages/ServiceProviderProfileSettings/ServiceProviderProfileSettings"; 
 
 // Authority Page
 import AuthorityDashboard from "./pages/AuthorityDashboard/AuthorityDashboard.jsx";
@@ -59,7 +75,31 @@ createRoot(document.getElementById("root")).render(
         <Route path="/events" element={<CommunityEvents />} />
         <Route path="/sos" element={<EmergencySOS />} />
         <Route path="/profile" element={<ResidentProfileSettings />} />
+
+        {/* --- Service Provider Routes (NEW Routes) --- */}
+        <Route 
+          path="/serviceprovider/dashboard" 
+          element={<ServiceProviderDashboard />} 
+        />
+        <Route 
+          path="/serviceprovider/bookings" 
+          element={<ManageBookings />} 
+        />
+        <Route 
+          path="/serviceprovider/services" 
+          element={<ManageServices />} 
+        />
+        <Route 
+          path="/serviceprovider/reviews" 
+          element={<CustomerReviews />} 
+        />
+        <Route 
+          path="/serviceprovider/profile" 
+          element={<ServiceProviderProfileSettings />} 
+        />
       </Routes>
     </BrowserRouter>
   </StrictMode>
 );
+
+// Note: This file is now minimal and focuses only on routing structure.

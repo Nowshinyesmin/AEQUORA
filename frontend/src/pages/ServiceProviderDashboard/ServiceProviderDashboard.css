@@ -1,0 +1,265 @@
+/* frontend/src/pages/ServiceProviderDashboard/ServiceProviderDashboard.css */
+
+.dashboard-root {
+  min-height: 100vh;
+  background-color: #f9fafb;
+  display: flex;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* --- Sidebar Styles --- */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column; /* Stacks children vertically */
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh; /* Takes full viewport height */
+  z-index: 1000;
+  /* Removed overflow-y: auto here to keep logout pinned. 
+     Scrolling is now handled inside .nav-links */
+}
+
+.sidebar-brand {
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: -0.5px;
+  border-bottom: 1px solid #f3f4f6;
+  text-align: center; /* Centered Title */
+  flex-shrink: 0; /* Prevents shrinking */
+}
+
+.user-profile-section {
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 1rem;
+  flex-shrink: 0; /* Prevents shrinking */
+}
+
+.profile-avatar-sp {
+  width: 64px;
+  height: 64px;
+  background-color: #e0e7ff; 
+  color: #4f46e5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.75rem;
+}
+
+.user-name {
+  font-weight: 600;
+  color: #111827;
+  font-size: 1rem;
+}
+
+.user-role {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+/* --- Navigation Links (Middle Section) --- */
+.nav-links {
+  flex: 1; /* This pushes the Footer to the bottom */
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto; /* Scroll ONLY the links if screen is too short */
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  text-decoration: none;
+  color: #4b5563;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.nav-item:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.nav-item.active {
+  background-color: #1f2937;
+  color: #ffffff;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+}
+
+/* --- Sidebar Footer (Logout Section) --- */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid #e5e7eb;
+  background-color: #fff; /* Ensures opaque background */
+  flex-shrink: 0; /* Prevents shrinking */
+}
+
+.logout-btn {
+  width: 100%; /* Full width button */
+  padding: 0.75rem;
+  border: 1px solid #e5e7eb;
+  background: white;
+  color: #ef4444;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.logout-btn:hover {
+  background-color: #fef2f2;
+}
+
+/* --- Main Content Area --- */
+.main-content {
+  margin-left: 260px;
+  flex: 1;
+  padding: 2rem;
+  overflow-y: auto;
+}
+
+.header-welcome {
+  margin-bottom: 2rem;
+}
+
+.header-welcome h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.header-welcome p {
+  color: #6b7280;
+}
+
+/* --- Stats Cards --- */
+.stat-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  height: 100%;
+  transition: transform 0.2s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-title {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.stat-icon-wrapper {
+  padding: 12px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Colors for icon backgrounds */
+.bg-blue-light { background-color: #eff6ff; color: #3b82f6; }
+.bg-green-light { background-color: #f0fdf4; color: #22c55e; }
+.bg-purple-light { background-color: #f5f3ff; color: #8b5cf6; }
+.bg-yellow-light { background-color: #fefce8; color: #eab308; }
+
+/* --- Recent Bookings Table Section --- */
+.table-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 2rem;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.custom-table th {
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #4b5563;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.custom-table td {
+  vertical-align: middle;
+  color: #374151;
+  font-size: 0.95rem;
+  padding: 1rem 0.75rem;
+}
+
+/* Status Badges */
+.status-badge {
+  padding: 0.35rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.status-badge.pending { background-color: #fffbeb; color: #d97706; }
+.status-badge.confirmed { background-color: #eff6ff; color: #2563eb; }
+.status-badge.completed { background-color: #f0fdf4; color: #16a34a; }
+.status-badge.cancelled { background-color: #fef2f2; color: #dc2626; }

@@ -1,0 +1,230 @@
+/* frontend/src/pages/ManageServices/ManageServices.css */
+
+/* --- 1. GLOBAL LAYOUT --- */
+.dashboard-root {
+    display: flex;
+    min-height: 100vh;
+    background-color: #f9fafb; /* Light Gray Background */
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    width: 100%;
+}
+
+.dashboard-content {
+    flex: 1;
+    margin-left: 260px; /* Exact match to sidebar width */
+    padding: 2rem;
+    width: calc(100% - 260px);
+}
+
+/* --- 2. SIDEBAR STYLING --- */
+.dashboard-sidebar {
+    width: 260px;
+    background-color: #ffffff;
+    border-right: 1px solid #e5e7eb;
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 1000;
+}
+
+.sidebar-brand {
+    padding: 1.5rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0d9488;
+    letter-spacing: -0.025em;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0 1rem;
+    gap: 0.25rem;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: all 0.2s;
+    background: transparent;
+    border: none;
+    width: 100%;
+    text-align: left;
+    cursor: pointer;
+}
+
+.sidebar-link:hover {
+    background-color: #f3f4f6;
+    color: #111827;
+}
+
+.sidebar-link.active {
+    background-color: #f0fdfa;
+    color: #0f766e;
+}
+
+.sidebar-icon {
+    margin-right: 0.75rem;
+}
+
+/* Sidebar Footer & Log Out */
+.sidebar-footer {
+    border-top: 1px solid #e5e7eb;
+}
+
+.sidebar-logout-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.75rem 1rem;
+    background-color: #ffffff; /* White */
+    color: #dc2626; /* Red Text */
+    border: 1px solid #cdcdcd;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sidebar-logout-btn:hover {
+    background-color: #fecaca;
+    transform: translateY(-1px);
+}
+
+.sidebar-logout-btn .sidebar-icon {
+    margin-right: 0.5rem;
+}
+
+/* --- 3. PAGE CONTENT STYLING --- */
+
+.page-title {
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.btn-primary-custom {
+    background-color: #0d9488;
+    border: none;
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    color: white;
+}
+
+.btn-primary-custom:hover {
+    background-color: #0f766e;
+    color: white;
+}
+
+/* Stats Cards (White Box) */
+.stat-card {
+    background: #ffffff !important; /* Force White */
+    padding: 1.5rem;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    margin-bottom: 1rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.stat-label {
+    display: block;
+    color: #6b7280;
+    font-size: 0.875rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-value {
+    font-size: 1.875rem;
+    font-weight: 700;
+    color: #111827;
+    margin: 0;
+    line-height: 1;
+}
+
+/* --- MAIN TABLE BOX (White Box) --- */
+.service-content-card {
+    background-color: #ffffff !important; /* Force White */
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); /* Subtle shadow for depth */
+    overflow: hidden;
+}
+
+.table-toolbar {
+    padding: 1.25rem;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background-color: #ffffff;
+}
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 0.4rem 0.8rem;
+    width: 300px;
+}
+
+.search-box input {
+    border: none;
+    background: transparent;
+    margin-left: 0.5rem;
+    outline: none;
+    width: 100%;
+    font-size: 0.9rem;
+}
+
+.btn-filter {
+    display: flex;
+    align-items: center;
+}
+
+/* Table Specifics */
+.custom-table th {
+    background-color: #f9fafb; /* Light gray header */
+    font-weight: 600;
+    color: #4b5563;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 1rem;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.custom-table td {
+    background-color: #ffffff; /* Explicit white cells */
+    padding: 1rem;
+    vertical-align: middle;
+    color: #374151;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.category-badge {
+    background-color: #f3f4f6;
+    color: #374151;
+    padding: 0.25rem 0.6rem;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    border: 1px solid #e5e7eb;
+}
+
+.action-btn {
+    padding: 0.25rem 0.5rem;
+}

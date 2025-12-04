@@ -3,27 +3,53 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Calendar, Vote, Siren, 
-  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle, AlertCircle 
+  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle 
 } from "lucide-react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
-import { api } from "../../api/client"; // Ensuring correct API import
+import { api } from "../../api/client"; 
 import "./EventsRequests.css";
 
-// --- Authority Sidebar (Matched to Screenshot) ---
+// --- Authority Sidebar (Now fetches data dynamically) ---
 const AuthoritySidebar = () => {
   const navigate = useNavigate();
+  // FIXED: Added state to store fetched user info
+  const [userInfo, setUserInfo] = useState({
+    firstName: '',
+    lastName: '',
+    role: 'Authority'
+  });
+
+  // FIXED: Added fetch logic
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const response = await api.get('auth/users/me/');
+        setUserInfo({
+          firstName: response.data.firstname || 'Authority',
+          lastName: response.data.lastname || 'User',
+          role: response.data.role || 'AUTHORITY'
+        });
+      } catch (error) {
+        console.error("Failed to fetch sidebar user", error);
+      }
+    };
+    fetchUserData();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
+  const displayName = `${userInfo.firstName} ${userInfo.lastName}`.trim();
+
   return (
     <aside className="dashboard-sidebar">
       <div className="sidebar-brand">Aequora</div>
       <div className="user-profile-section">
-        <div className="user-name-display">Authority User</div>
-        <div className="user-role-display">AUTHORITY</div>
+        {/* FIXED: Display dynamic name */}
+        <div className="user-name-display">{displayName}</div>
+        <div className="user-role-display">{userInfo.role.toUpperCase()}</div>
       </div>
       <nav className="sidebar-nav">
         <Link to="/authority/dashboard" className="nav-link-custom">
@@ -56,9 +82,9 @@ const AuthoritySidebar = () => {
 
 // --- Main Component ---
 const EventsRequests = () => {
-  const [activeTab, setActiveTab] = useState("active"); // 'active' or 'requests'
-  const [events, setEvents] = useState([]); // Published events
-  const [requests, setRequests] = useState([]); // Pending requests from residents
+  const [activeTab, setActiveTab] = useState("active");
+  const [events, setEvents] = useState([]); 
+  const [requests, setRequests] = useState([]); 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -80,12 +106,11 @@ const EventsRequests = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Fetch Active Events
-      const eventsRes = await api.get('authority/events/');
+      const [eventsRes, requestsRes] = await Promise.all([
+         api.get('authority/events/'),
+         api.get('authority/events/requests/')
+      ]);
       setEvents(eventsRes.data);
-
-      // Fetch Pending Requests
-      const requestsRes = await api.get('authority/events/requests/');
       setRequests(requestsRes.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -94,15 +119,12 @@ const EventsRequests = () => {
     }
   };
 
-  // --- Handlers ---
-
   const handleCreateSubmit = async (e) => {
     e.preventDefault();
     try {
       await api.post('authority/events/', newEvent);
       setShowCreateModal(false);
       fetchData(); // Refresh list
-      // Reset form
       setNewEvent({ title: "", date: "", time: "", location: "", category: "Community", description: "" });
     } catch (error) {
       console.error("Error creating event:", error);
@@ -111,7 +133,6 @@ const EventsRequests = () => {
   };
 
   const handleRequestAction = async (eventId, action) => {
-    // action = 'approve' or 'reject'
     try {
       await api.post(`authority/events/${eventId}/action/`, { action });
       fetchData(); // Refresh lists
@@ -176,7 +197,7 @@ const EventsRequests = () => {
                 <div className="col-12"><div className="empty-state">No active events found.</div></div>
               ) : (
                 events.map(event => (
-                  <div className="col-md-6 col-xl-4" key={event.id}>
+                  <div className="col-md-6 col-xl-4" key={event.eventid}>
                     <div className="event-card">
                       <div className="event-card-body">
                         <div className="d-flex justify-content-between mb-2">
@@ -194,7 +215,7 @@ const EventsRequests = () => {
                          <Button 
                             variant="outline-danger" 
                             size="sm" 
-                            onClick={() => handleDeleteEvent(event.id)}
+                            onClick={() => handleDeleteEvent(event.eventid)}
                           >
                             Delete
                           </Button>
@@ -211,7 +232,7 @@ const EventsRequests = () => {
                 <div className="col-12"><div className="empty-state">No pending requests from residents.</div></div>
               ) : (
                 requests.map(req => (
-                  <div className="col-md-6 col-xl-4" key={req.id}>
+                  <div className="col-md-6 col-xl-4" key={req.eventid}>
                     <div className="event-card" style={{borderColor: '#f59e0b'}}>
                       <div className="event-card-body">
                          <div className="d-flex justify-content-between mb-2">
@@ -226,10 +247,10 @@ const EventsRequests = () => {
                         </div>
                       </div>
                       <div className="event-card-footer">
-                        <button className="btn-approve" onClick={() => handleRequestAction(req.id, 'approve')}>
+                        <button className="btn-approve" onClick={() => handleRequestAction(req.eventid, 'approve')}>
                           <CheckCircle size={16} className="me-1"/> Approve
                         </button>
-                        <button className="btn-reject" onClick={() => handleRequestAction(req.id, 'reject')}>
+                        <button className="btn-reject" onClick={() => handleRequestAction(req.eventid, 'reject')}>
                           <XCircle size={16} className="me-1"/> Reject
                         </button>
                       </div>
@@ -250,68 +271,34 @@ const EventsRequests = () => {
             <Modal.Body>
               <Form.Group className="mb-3">
                 <Form.Label>Event Title</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  required 
-                  value={newEvent.title}
-                  onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
-                />
+                <Form.Control type="text" required value={newEvent.title} onChange={(e) => setNewEvent({...newEvent, title: e.target.value})} />
               </Form.Group>
-              
               <div className="row">
                 <div className="col-md-6 mb-3">
                   <Form.Label>Date</Form.Label>
-                  <Form.Control 
-                    type="date" 
-                    required 
-                    value={newEvent.date}
-                    onChange={(e) => setNewEvent({...newEvent, date: e.target.value})}
-                  />
+                  <Form.Control type="date" required value={newEvent.date} onChange={(e) => setNewEvent({...newEvent, date: e.target.value})} />
                 </div>
                 <div className="col-md-6 mb-3">
                   <Form.Label>Time</Form.Label>
-                  <Form.Control 
-                    type="time" 
-                    required 
-                    value={newEvent.time}
-                    onChange={(e) => setNewEvent({...newEvent, time: e.target.value})}
-                  />
+                  <Form.Control type="time" required value={newEvent.time} onChange={(e) => setNewEvent({...newEvent, time: e.target.value})} />
                 </div>
               </div>
-
               <Form.Group className="mb-3">
                 <Form.Label>Location</Form.Label>
-                <Form.Control 
-                  type="text" 
-                  required 
-                  placeholder="e.g., Community Hall"
-                  value={newEvent.location}
-                  onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
-                />
+                <Form.Control type="text" required placeholder="e.g., Community Hall" value={newEvent.location} onChange={(e) => setNewEvent({...newEvent, location: e.target.value})} />
               </Form.Group>
-
               <Form.Group className="mb-3">
                 <Form.Label>Category</Form.Label>
-                <Form.Select 
-                  value={newEvent.category}
-                  onChange={(e) => setNewEvent({...newEvent, category: e.target.value})}
-                >
+                <Form.Select value={newEvent.category} onChange={(e) => setNewEvent({...newEvent, category: e.target.value})}>
                   <option value="Community">Community</option>
                   <option value="Maintenance">Maintenance</option>
                   <option value="Emergency">Emergency</option>
                   <option value="Social">Social</option>
                 </Form.Select>
               </Form.Group>
-
               <Form.Group className="mb-3">
                 <Form.Label>Description</Form.Label>
-                <Form.Control 
-                  as="textarea" 
-                  rows={3} 
-                  required 
-                  value={newEvent.description}
-                  onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
-                />
+                <Form.Control as="textarea" rows={3} required value={newEvent.description} onChange={(e) => setNewEvent({...newEvent, description: e.target.value})} />
               </Form.Group>
             </Modal.Body>
             <Modal.Footer>

@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     User, Resident, UserEmail, UserPhonenumber,
     Emergencyreport, Issuereport, Event, Service, Booking,  
-    Community, Example, Eventparticipation 
+    Community, Example, Eventparticipation,Issuevote, Issueassignment,
+    Review, Authority
 )
 # In base/serializers.py
 
@@ -201,3 +202,61 @@ class EventParticipationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Eventparticipation  # Ensure this matches the import name from models
         fields = ['participationid', 'eventid', 'interesttype']
+
+
+# Authority Feature Serializers (Sayeda Nusrat)
+
+class AuthorityIssueSerializer(serializers.ModelSerializer):
+    """
+    Extends Issue data with vote counts and assignment details
+    required by ManageIssues.jsx and CommunityVoting.jsx
+    """
+    vote_count = serializers.IntegerField(read_only=True)
+    assignedTo = serializers.SerializerMethodField()
+    resident_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Issuereport
+        fields = [
+            'issueid', 'title', 'type', 'description', 
+            'mapaddress', 'prioritylevel', 'status', 'createdat', 
+            'vote_count', 'assignedTo', 'resident_name'
+        ]
+
+    def get_resident_name(self, obj):
+        if obj.residentid and obj.residentid.userid:
+            return f"{obj.residentid.userid.firstname} {obj.residentid.userid.lastname}"
+        return "Unknown"
+
+    def get_assignedTo(self, obj):
+        # Fetch the department name from the IssueAssignment table
+        assignment = Issueassignment.objects.filter(issueid=obj).last()
+        if assignment and assignment.authorityid:
+            return assignment.authorityid.departmentname
+        return "Unassigned"
+
+class AuthorityEventSerializer(serializers.ModelSerializer):
+    """
+    Handles Event creation and listing for Authority
+    """
+    posted_by_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Event
+        fields = [
+            'eventid', 'title', 'description', 'date', 'time', 
+            'location', 'category', 'status', 'posted_by_name'
+        ]
+
+    def get_posted_by_name(self, obj):
+        if obj.postedbyid:
+            return f"{obj.postedbyid.firstname} {obj.postedbyid.lastname}"
+        return "System"
+
+class AuthoritySOSSerializer(serializers.ModelSerializer):
+    """
+    For AuthorityEmergency.jsx
+    """
+    class Meta:
+        model = Emergencyreport
+        fields = '__all__'

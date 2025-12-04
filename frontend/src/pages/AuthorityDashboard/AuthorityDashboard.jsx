@@ -31,7 +31,15 @@ function AuthorityDashboard() {
     role: 'Authority'
   });
 
-  // Fetch User Data
+  // State for Dashboard Stats
+  const [stats, setStats] = useState({
+    total_issues: 0,
+    resolved_issues: 0,
+    pending_issues: 0,
+    satisfaction_rate: 0
+  });
+
+  // 1. Fetch User Data (FIXED THE VARIABLE NAMES HERE)
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -44,10 +52,12 @@ function AuthorityDashboard() {
         const response = await api.get('auth/users/me/');
        
         setUserInfo({
-          firstName: response.data.first_name || '', 
-          lastName: response.data.last_name || '',
+          // FIXED: Backend sends 'firstname' (lowercase), NOT 'first_name'
+          firstName: response.data.firstname || '', 
+          // FIXED: Backend sends 'lastname' (lowercase), NOT 'last_name'
+          lastName: response.data.lastname || '',
           username: response.data.username || '',
-          role: 'Authority'
+          role: response.data.role || 'Authority'
         });
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -58,6 +68,22 @@ function AuthorityDashboard() {
 
     fetchUserData();
   }, [navigate]);
+
+  // 2. Fetch Dashboard Statistics
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await api.get('authority/dashboard-stats/');
+        setStats(response.data);
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats", error);
+      }
+    };
+    
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('token');
@@ -144,7 +170,7 @@ function AuthorityDashboard() {
                   <span className="stat-title">Total Issues Reported</span>
                   <AlertTriangle size={22} className="text-warning" />
                 </div>
-                <div className="stat-value">0</div>
+                <div className="stat-value">{stats.total_issues}</div>
                 <small className="text-muted mt-2">All time reports</small>
               </div>
             </Col>
@@ -155,8 +181,8 @@ function AuthorityDashboard() {
                   <span className="stat-title">Issues Resolved</span>
                   <CheckCircle size={22} className="text-success" />
                 </div>
-                <div className="stat-value">0</div>
-                <small className="text-success mt-2">+0% this week</small>
+                <div className="stat-value">{stats.resolved_issues}</div>
+                <small className="text-success mt-2">Active Resolutions</small>
               </div>
             </Col>
 
@@ -166,7 +192,7 @@ function AuthorityDashboard() {
                   <span className="stat-title">Pending Tasks</span>
                   <Clock size={22} className="text-danger" />
                 </div>
-                <div className="stat-value">0</div>
+                <div className="stat-value">{stats.pending_issues}</div>
                 <small className="text-danger mt-2">Requires attention</small>
               </div>
             </Col>
@@ -199,25 +225,25 @@ function AuthorityDashboard() {
                   <div className="mb-4">
                     <div className="d-flex justify-content-between mb-1">
                       <span>Issue Resolution</span>
-                      <span className="fw-bold">0%</span>
+                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
                     </div>
-                    <ProgressBar now={0} variant="success" style={{ height: '8px' }} />
+                    <ProgressBar now={stats.satisfaction_rate} variant="success" style={{ height: '8px' }} />
                   </div>
 
                   <div className="mb-4">
                     <div className="d-flex justify-content-between mb-1">
                       <span>Response Time</span>
-                      <span className="fw-bold">0%</span>
+                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
                     </div>
-                    <ProgressBar now={0} variant="warning" style={{ height: '8px' }} />
+                    <ProgressBar now={stats.satisfaction_rate} variant="warning" style={{ height: '8px' }} />
                   </div>
 
                   <div className="mb-4">
                     <div className="d-flex justify-content-between mb-1">
                       <span>Community Feedback</span>
-                      <span className="fw-bold">0%</span>
+                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
                     </div>
-                    <ProgressBar now={0} variant="info" style={{ height: '8px' }} />
+                    <ProgressBar now={stats.satisfaction_rate} variant="info" style={{ height: '8px' }} />
                   </div>
                  
                   <div className="text-center mt-auto">
@@ -227,8 +253,6 @@ function AuthorityDashboard() {
               </Card>
             </Col>
           </Row>
-
-          {/* 3. Emergency Section REMOVED */}
 
         </Container>
       </main>

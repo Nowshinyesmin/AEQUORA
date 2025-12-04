@@ -1,6 +1,6 @@
 // frontend/src/pages/ManageIssues/ManageIssues.jsx
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import Link and useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   ClipboardList, 
@@ -9,19 +9,20 @@ import {
   Calendar, 
   Vote, 
   LogOut 
-} from 'lucide-react'; // Import Icons
+} from 'lucide-react';
 import { api } from "../../api/client"; 
 import './ManageIssues.css';
 
-// Internal Departments List
-const DEPARTMENTS = ['Unassigned', 'Roads Dept', 'Water Works', 'Sanitation Dept', 'Electrical Dept', 'Traffic Police'];
-
 const ManageIssues = () => {
   const navigate = useNavigate();
+  
+  // --- States ---
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // --- User Info State (For Sidebar) ---
+  // NEW: State to hold the dynamic list of departments from the database
+  const [departments, setDepartments] = useState(['Unassigned']); 
+
   const [userInfo, setUserInfo] = useState({
     firstName: '',
     lastName: '',
@@ -36,7 +37,7 @@ const ManageIssues = () => {
     urgency: 'All'
   });
 
-  // --- 1. Fetch User Data (For Sidebar Profile) ---
+  // --- 1. Fetch User Data (FIXED VARIABLE NAMES) ---
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -47,10 +48,12 @@ const ManageIssues = () => {
         }
         const response = await api.get('auth/users/me/');
         setUserInfo({
-          firstName: response.data.first_name || '',
-          lastName: response.data.last_name || '',
+          // FIXED: Backend uses 'firstname', not 'first_name'
+          firstName: response.data.firstname || '',
+          // FIXED: Backend uses 'lastname', not 'last_name'
+          lastName: response.data.lastname || '',
           username: response.data.username || '',
-          role: 'Authority'
+          role: response.data.role || 'Authority'
         });
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -59,19 +62,25 @@ const ManageIssues = () => {
     fetchUserData();
   }, [navigate]);
 
-  // --- 2. Fetch Issues on Component Mount ---
+  // --- 2. Fetch Issues AND Departments ---
   useEffect(() => {
-    const fetchIssues = async () => {
+    const fetchData = async () => {
       try {
-        const response = await api.get('issues/');
-        setIssues(response.data);
+        const [issuesRes, deptRes] = await Promise.all([
+            api.get('issues/'),              
+            api.get('authority/departments/') 
+        ]);
+
+        setIssues(issuesRes.data);
+        setDepartments(['Unassigned', ...deptRes.data]);
+
       } catch (err) {
-        console.error("Backend not running yet, or connection failed:", err);
+        console.error("Backend connection failed:", err);
       } finally {
         setLoading(false);
       }
     };
-    fetchIssues();
+    fetchData();
   }, []);
 
   const handleLogout = () => {
@@ -90,11 +99,11 @@ const ManageIssues = () => {
       const response = await api.patch(`issues/${id}/`, { status: newStatus });
       if (response.status === 200) {
         setIssues(issues.map(issue => 
-          issue.id === id ? { ...issue, status: response.data.status } : issue
+          (issue.id || issue.issueid) === id ? { ...issue, status: response.data.status } : issue
         ));
       }
     } catch (err) {
-      alert("Cannot update: Backend is offline.");
+      alert("Cannot update: Backend is offline or error occurred.");
     }
   };
 
@@ -104,11 +113,11 @@ const ManageIssues = () => {
       const response = await api.patch(`issues/${id}/`, { assignedTo: newDepartment });
       if (response.status === 200) {
         setIssues(issues.map(issue => 
-          issue.id === id ? { ...issue, assignedTo: response.data.assignedTo } : issue
+          (issue.id || issue.issueid) === id ? { ...issue, assignedTo: response.data.assignedTo } : issue
         ));
       }
     } catch (err) {
-      alert("Cannot assign: Backend is offline.");
+      alert("Cannot assign: Backend is offline or error occurred.");
     }
   };
 
@@ -159,7 +168,7 @@ const ManageIssues = () => {
   return (
     <div className="manage-issues-root">
       
-      {/* --- INTEGRATED SIDEBAR --- */}
+      {/* --- SIDEBAR --- */}
       <aside className="manage-sidebar">
         <div className="sidebar-brand">
           Aequora
@@ -180,7 +189,6 @@ const ManageIssues = () => {
             Dashboard
           </Link>
          
-          {/* Active Class is here now */}
           <Link to="/authority/manage-issues" className="nav-link-custom active">
             <ClipboardList size={20} className="nav-icon" />
             Manage Issues
@@ -290,8 +298,8 @@ const ManageIssues = () => {
                           value={issue.assignedTo || ''}
                           onChange={(e) => handleAssignmentChange(issue.id || issue.issueid, e.target.value)}
                         >
-                          {DEPARTMENTS.map(dept => (
-                            <option key={dept} value={dept === 'Unassigned' ? '' : dept}>
+                          {departments.map((dept, index) => (
+                            <option key={index} value={dept === 'Unassigned' ? '' : dept}>
                               {dept}
                             </option>
                           ))}

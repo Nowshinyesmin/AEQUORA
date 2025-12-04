@@ -36,14 +36,14 @@ const AnalyticsReports = () => {
   // State for Analytics Data
   const [analytics, setAnalytics] = useState({
     totalReports: 0,
-    avgResolutionTime: '0 hrs', // Requirement: Avg resolution time
-    satisfactionScore: 0,       // Requirement: Resident satisfaction
-    categoryStats: [],          // Requirement: Reports per category
-    topAreas: [],               // Requirement: Top areas
+    avgResolutionTime: '0 hrs', 
+    satisfactionScore: 0,       
+    categoryStats: [],          
+    topAreas: [],               
     resolutionTrend: [] 
   });
 
-  // 1. Fetch User Data
+  // 1. Fetch User Data (FIXED VARIABLE NAMES)
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -54,10 +54,12 @@ const AnalyticsReports = () => {
         }
         const response = await api.get('auth/users/me/');
         setUserInfo({
-          firstName: response.data.first_name || '',
-          lastName: response.data.last_name || '',
+          // FIXED: Backend uses 'firstname', not 'first_name'
+          firstName: response.data.firstname || '',
+          // FIXED: Backend uses 'lastname', not 'last_name'
+          lastName: response.data.lastname || '',
           username: response.data.username || '',
-          role: 'Authority'
+          role: response.data.role || 'Authority'
         });
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -70,13 +72,10 @@ const AnalyticsReports = () => {
   useEffect(() => {
     const fetchAnalytics = async () => {
       try {
-        // NOTE: You will need to create this endpoint in your Django views later.
-        // It should aggregate data from IssueReport and Review models.
         const response = await api.get('analytics/summary/');
         setAnalytics(response.data);
       } catch (err) {
         console.error("Backend not ready, using fallback structure for UI dev");
-        // We keep the state empty or default if API fails
       } finally {
         setLoading(false);
       }
@@ -101,7 +100,6 @@ const AnalyticsReports = () => {
       return;
     }
 
-    // Convert category stats to CSV format
     const headers = ["Category,Count\n"];
     const rows = analytics.categoryStats.map(item => `${item.name},${item.count}\n`);
     const csvContent = "data:text/csv;charset=utf-8," + headers + rows.join("");
@@ -118,7 +116,7 @@ const AnalyticsReports = () => {
   return (
     <div className="analytics-root">
       
-      {/* --- SIDEBAR (Consistent with other pages) --- */}
+      {/* --- SIDEBAR --- */}
       <aside className="analytics-sidebar">
         <div className="sidebar-brand">Aequora</div>
 
@@ -184,7 +182,6 @@ const AnalyticsReports = () => {
 
           {/* 1. Key Metrics Row */}
           <Row className="g-4 mb-4">
-            {/* Avg Resolution Time */}
             <Col md={4}>
               <div className="metric-card">
                 <div className="metric-icon-bg bg-light-blue">
@@ -198,7 +195,6 @@ const AnalyticsReports = () => {
               </div>
             </Col>
 
-            {/* Satisfaction Score */}
             <Col md={4}>
               <div className="metric-card">
                 <div className="metric-icon-bg bg-light-green">
@@ -212,7 +208,6 @@ const AnalyticsReports = () => {
               </div>
             </Col>
 
-            {/* Total Reports */}
             <Col md={4}>
               <div className="metric-card">
                 <div className="metric-icon-bg bg-light-purple">
@@ -229,13 +224,10 @@ const AnalyticsReports = () => {
 
           {/* 2. Detailed Charts Section */}
           <Row className="g-4">
-            
-            {/* Reports Per Category */}
             <Col lg={8}>
               <Card className="border-0 shadow-sm h-100 radius-12">
                 <Card.Body className="p-4">
                   <h5 className="fw-bold mb-4">Reports per Category</h5>
-                  
                   {analytics.categoryStats.length > 0 ? (
                     <div className="category-chart-container">
                       {analytics.categoryStats.map((cat, index) => (
@@ -244,7 +236,6 @@ const AnalyticsReports = () => {
                             <span className="fw-medium">{cat.name}</span>
                             <span className="text-muted">{cat.count} issues</span>
                           </div>
-                          {/* Visual Bar representation */}
                           <ProgressBar 
                             now={(cat.count / analytics.totalReports) * 100} 
                             variant="primary" 
@@ -263,7 +254,6 @@ const AnalyticsReports = () => {
               </Card>
             </Col>
 
-            {/* Top Areas */}
             <Col lg={4}>
               <Card className="border-0 shadow-sm h-100 radius-12">
                 <Card.Body className="p-4">

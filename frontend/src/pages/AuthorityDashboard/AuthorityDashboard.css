@@ -36,13 +36,22 @@ frontend/src/pages/AuthorityDashboard/AuthorityDashboard.css */
 
 
 .sidebar-brand {
-  padding: 1.5rem;
-  padding-bottom: 1rem;
-  font-size: 1.25rem;
-  font-weight: 800;
+  /* Spacing */
+  padding: 2rem 1rem; 
+  
+  /* Typography */
+  font-size: 1.8rem;   /* Larger size */
+  font-weight: 900;    /* Extra Bold */
   color: #111827;
-  display: flex;
-  align-items: center;
+  
+  /* ALIGNMENT (The Fix) */
+  text-align: center;  /* Puts it in the middle */
+  width: 100%;         /* Ensures it spans full width */
+  display: block;      /* Ensures it behaves like a block to center correctly */
+  
+  /* Optional: Make it look more like a logo */
+  letter-spacing: 1px;
+  text-transform: uppercase; 
 }
 
 

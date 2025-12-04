@@ -16,6 +16,14 @@ from django.contrib.auth import authenticate
 
 from django.core.files.storage import default_storage
 
+#New added for Authority's backend(Sayeda Nusrat)
+
+from django.db.models import Count, Avg, F
+
+from django.utils import timezone
+
+import datetime
+
 
 
 from .models import (
@@ -48,7 +56,18 @@ from .models import (
 
     Community,
 
-    Payment
+    Payment,
+
+    # NEEDED TO ADD THESE 3 FOR AUTHORITY
+
+    Review,
+
+    Issueassignment,
+
+    Issuevote,
+
+    Authoritycommunity
+
 
 )
 
@@ -1354,3 +1373,259 @@ class BookingView(generics.ListCreateAPIView):
         except Service.DoesNotExist:
 
             raise serializers.ValidationError("Service not found.")
+
+
+# ==============================================================================
+#  AUTHORITY / ADMIN VIEWS (NEW IMPLEMENTATION BY SAYEDA NUSRAT)
+# ==============================================================================
+
+from .serializers import (
+    AuthorityIssueSerializer, 
+    AuthorityEventSerializer, 
+    AuthoritySOSSerializer
+)
+
+# --- 1. Authority Dashboard Stats ---
+
+class AuthorityDashboardStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # Calculate stats for AuthorityDashboard.jsx
+
+        total_issues = Issuereport.objects.count()
+        resolved_issues = Issuereport.objects.filter(status='Resolved').count()
+        pending_issues = Issuereport.objects.exclude(status='Resolved').count()
+
+        # Simple Satisfaction Logic (Avg Rating from Reviews)
+        
+        avg_rating = Review.objects.aggregate(Avg('rating'))['rating__avg'] or 0
+        satisfaction_rate = round((avg_rating / 5) * 100, 1)
+
+        return Response({
+            "total_issues": total_issues,
+            "resolved_issues": resolved_issues,
+            "pending_issues": pending_issues,
+            "satisfaction_rate": satisfaction_rate
+        })
+
+
+# --- 2. Manage Issues (List & Filters) ---
+class AuthorityIssueListView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AuthorityIssueSerializer
+
+    def get_queryset(self):
+        # Annotate with vote count for sorting/display
+        return Issuereport.objects.annotate(vote_count=Count('issuevote')).order_by('-createdat')
+
+
+# --- 3. Manage Issues (Update Status & Assignment) ---
+class AuthorityIssueDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            issue = Issuereport.objects.get(pk=pk)
+            data = request.data
+
+            # A. Handle Status Update
+            if 'status' in data:
+                issue.status = data['status']
+                if data['status'] == 'Resolved':
+                    issue.resolvedat = timezone.now()
+                issue.save()
+
+            # B. Handle Assignment (Department)
+            # This logic links the issue to an Authority via IssueAssignment table
+            if 'assignedTo' in data:
+                dept_name = data['assignedTo']
+                if dept_name:
+                    # Find an authority in that department
+                    auth_user = Authority.objects.filter(departmentname__icontains=dept_name).first()
+                    
+                    if auth_user:
+                        # Create or Update Assignment
+                        Issueassignment.objects.update_or_create(
+                            issueid=issue,
+                            defaults={
+                                'authorityid': auth_user,
+                                'assigneddate': timezone.now(),
+                                'status': 'Assigned'
+                            }
+                        )
+            
+            # Return updated object
+            serializer = AuthorityIssueSerializer(issue)
+            return Response(serializer.data)
+
+        except Issuereport.DoesNotExist:
+            return Response({"error": "Issue not found"}, status=404)
+
+
+# --- 4. Analytics & Reports ---
+class AnalyticsSummaryView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # A. Total Reports
+        total = Issuereport.objects.count()
+
+        # B. Avg Resolution Time (ResolvedAt - CreatedAt)
+        # We fetch resolved issues and calculate in python for simplicity with SQLite/Django
+        resolved_issues = Issuereport.objects.filter(status='Resolved', resolvedat__isnull=False)
+        total_seconds = 0
+        count = 0
+        for i in resolved_issues:
+            if i.createdat and i.resolvedat:
+                diff = i.resolvedat - i.createdat
+                total_seconds += diff.total_seconds()
+                count += 1
+        
+        avg_time_str = "0h 0m"
+        if count > 0:
+            avg_seconds = total_seconds / count
+            hours = int(avg_seconds // 3600)
+            avg_time_str = f"{hours} hrs"
+
+        # C. Satisfaction Score (From Review Table)
+        avg_score = Review.objects.aggregate(Avg('rating'))['rating__avg'] or 0
+        
+        # D. Category Stats
+        # Group by 'type' (Category)
+        cat_stats = Issuereport.objects.values('type').annotate(count=Count('issueid')).order_by('-count')
+        formatted_cats = [{'name': c['type'] or 'Uncategorized', 'count': c['count']} for c in cat_stats]
+
+        # E. Top Areas
+        # Group by 'mapaddress' (Area)
+        area_stats = Issuereport.objects.values('mapaddress').annotate(count=Count('issueid')).order_by('-count')[:5]
+        formatted_areas = [{'name': a['mapaddress'] or 'Unknown', 'count': a['count']} for a in area_stats]
+
+        return Response({
+            "totalReports": total,
+            "avgResolutionTime": avg_time_str,
+            "satisfactionScore": round(avg_score, 1),
+            "categoryStats": formatted_cats,
+            "topAreas": formatted_areas
+        })
+
+
+# --- 5. Emergency SOS Management ---
+class AuthoritySOSView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        sos_list = Emergencyreport.objects.all().order_by('-timestamp')
+        serializer = AuthoritySOSSerializer(sos_list, many=True)
+        return Response(serializer.data)
+
+class AuthoritySOSDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            sos = Emergencyreport.objects.get(pk=pk)
+            sos.status = request.data.get('status', sos.status)
+            sos.save()
+            return Response({'status': 'success'})
+        except Emergencyreport.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
+    def post(self, request, pk):
+        # Handle Dispatch Logic (Mock)
+        # URL: authority/sos/<id>/dispatch/
+        return Response({'message': 'Units Dispatched Successfully'})
+
+
+# --- 6. Community Voting Results ---
+class VotingResultsView(generics.ListAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    serializer_class = AuthorityIssueSerializer
+
+    def get_queryset(self):
+        # Return issues ordered by highest vote count
+        return Issuereport.objects.annotate(vote_count=Count('issuevote')).order_by('-vote_count')
+
+
+# --- 7. Authority Events & Requests ---
+class AuthorityEventView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # List Active Published Events
+        events = Event.objects.filter(status='Published').order_by('-date')
+        serializer = AuthorityEventSerializer(events, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        # Create New Event
+        data = request.data
+        user_email = UserEmail.objects.get(email=request.user.email)
+        
+        # Default community (or fetch from user)
+        community = user_email.userid.communityid 
+        if not community:
+            community = Community.objects.first()
+
+        Event.objects.create(
+            postedbyid=user_email.userid,
+            communityid=community,
+            title=data.get('title'),
+            description=data.get('description'),
+            date=data.get('date'),
+            time=data.get('time'),
+            location=data.get('location'),
+            category=data.get('category'),
+            status='Published' # Authority posts are auto-published
+        )
+        return Response({'message': 'Event Created'}, status=201)
+
+class AuthorityEventRequestsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # List Events that are 'Pending' (Requests from residents)
+        requests = Event.objects.filter(status='Pending').order_by('-date')
+        serializer = AuthorityEventSerializer(requests, many=True)
+        return Response(serializer.data)
+
+class AuthorityEventActionView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        # Approve or Reject event
+        action = request.data.get('action') # 'approve' or 'reject'
+        try:
+            event = Event.objects.get(pk=pk)
+            if action == 'approve':
+                event.status = 'Published'
+                event.save()
+            elif action == 'reject':
+                event.status = 'Rejected'
+                event.save()
+            return Response({'status': 'success'})
+        except Event.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+    
+    def delete(self, request, pk):
+        try:
+            Event.objects.get(pk=pk).delete()
+            return Response({'status': 'deleted'})
+        except:
+             return Response({'error': 'Not found'}, status=404)
+        
+# base/views.py
+
+class DepartmentListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        # 1. Get all unique department names from the Authority table
+        # 'flat=True' returns a simple list like ['Roads', 'Water'] instead of tuples
+        departments = Authority.objects.values_list('departmentname', flat=True).distinct()
+        
+        # 2. Clean the list (remove None or empty strings if any exist)
+        valid_departments = [dept for dept in departments if dept]
+
+        # 3. Return the list
+        return Response(valid_departments)

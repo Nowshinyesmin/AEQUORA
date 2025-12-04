@@ -2,19 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ClipboardList, 
-  BarChart2, 
-  Siren, 
-  Calendar, 
-  Vote, 
-  LogOut,
-  ThumbsUp,
-  TrendingUp,
-  AlertTriangle,
-  ArrowUp,
-  Trophy,
-  ListFilter
+  LayoutDashboard, ClipboardList, BarChart2, Siren, Calendar, Vote, LogOut,
+  ThumbsUp, TrendingUp, AlertTriangle, ArrowUp, Trophy, ListFilter
 } from 'lucide-react';
 import { api } from "../../api/client"; 
 import './CommunityVoting.css';
@@ -23,10 +12,8 @@ const CommunityVoting = () => {
   const navigate = useNavigate();
   const [votingData, setVotingData] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // --- UI Control States ---
-  const [activeTab, setActiveTab] = useState('top10'); // 'top10' or 'all'
-  const [sortOrder, setSortOrder] = useState('desc'); // 'desc' (High to Low) or 'asc' (Low to High)
+  const [activeTab, setActiveTab] = useState('top10'); 
+  const [sortOrder, setSortOrder] = useState('desc'); 
 
   // --- User Info State ---
   const [userInfo, setUserInfo] = useState({
@@ -36,7 +23,7 @@ const CommunityVoting = () => {
     role: 'Authority'
   });
 
-  // --- 1. Fetch User Data ---
+  // --- 1. Fetch User Data (FIXED VARIABLE NAMES) ---
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -47,10 +34,12 @@ const CommunityVoting = () => {
         }
         const response = await api.get('auth/users/me/');
         setUserInfo({
-          firstName: response.data.first_name || '',
-          lastName: response.data.last_name || '',
+          // FIXED: Backend uses 'firstname', not 'first_name'
+          firstName: response.data.firstname || '',
+          // FIXED: Backend uses 'lastname', not 'last_name'
+          lastName: response.data.lastname || '',
           username: response.data.username || '',
-          role: 'Authority'
+          role: response.data.role || 'Authority'
         });
       } catch (error) {
         console.error("Failed to fetch user profile", error);
@@ -84,7 +73,6 @@ const CommunityVoting = () => {
     return fullName || userInfo.username || 'Authority User';
   };
 
-  // --- DATA PROCESSING LOGIC ---
   const getSortedData = () => {
     const dataCopy = [...votingData];
     return dataCopy.sort((a, b) => {
@@ -97,17 +85,15 @@ const CommunityVoting = () => {
   const getDisplayData = () => {
     const sorted = getSortedData();
     if (activeTab === 'top10') {
-      // Always show Top 10 desc for priority view
       return sorted.sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)).slice(0, 10);
     }
-    return sorted; // 'all' tab uses the sort dropdown
+    return sorted; 
   };
 
   const displayIssues = getDisplayData();
   const totalVotes = votingData.reduce((acc, curr) => acc + (curr.vote_count || 0), 0);
   const topIssue = votingData.length > 0 ? [...votingData].sort((a,b) => b.vote_count - a.vote_count)[0] : null;
 
-  // --- CSS Helpers ---
   const getUrgencyClass = (urgency) => {
     const u = (urgency || '').toLowerCase();
     if (u === 'high') return 'urgency-high';
@@ -144,13 +130,11 @@ const CommunityVoting = () => {
       {/* --- MAIN CONTENT --- */}
       <main className="voting-main">
         
-        {/* --- Header Section (Stacked Vertically) --- */}
         <div className="page-header-block">
           <h1 className="page-title">Community Voting Results</h1>
           <p className="page-subtitle">Prioritize community actions based on resident upvotes.</p>
         </div>
 
-        {/* --- Stats Cards --- */}
         <div className="stats-grid">
           <div className="stat-card">
             <div className="stat-icon-wrapper blue-bg">
@@ -183,7 +167,6 @@ const CommunityVoting = () => {
           </div>
         </div>
 
-        {/* --- CONTROLS: Tabs & Sorting --- */}
         <div className="controls-container">
           <div className="tabs-wrapper">
             <button 
@@ -217,7 +200,6 @@ const CommunityVoting = () => {
           )}
         </div>
 
-        {/* --- Voting Table --- */}
         <div className="voting-table-container">
           <div className="table-header-row">
             <h3>{activeTab === 'top10' ? 'Top 10 Priority Issues' : 'All Issues List'}</h3>

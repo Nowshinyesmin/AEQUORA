@@ -153,23 +153,7 @@
   font-size: 1rem;
 }
 
-/* --- Report Form Card --- */
-.report-form-card {
-  background-color: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  padding: 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.form-card-title {
-  font-size: 1rem;
-  font-weight: 600;
-  color: #111827;
-  margin-bottom: 1.25rem;
-}
-
+/* --- Form Styles (Used inside Modal now) --- */
 .custom-label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -188,13 +172,8 @@
 
 .custom-input:focus {
   border-color: #111827;
-  box-shadow: none; /* Removed default blue shadow */
+  box-shadow: none;
   outline: 1px solid #111827;
-}
-
-.custom-input::placeholder {
-  color: #9ca3af;
-  font-size: 0.9rem;
 }
 
 .btn-submit-issue {
@@ -207,34 +186,6 @@
 
 .btn-submit-issue:hover {
   background-color: #000000;
-}
-
-/* --- Filter Buttons --- */
-.filter-group {
-  margin-bottom: 2rem;
-  display: flex;
-  gap: 0.75rem;
-}
-
-.filter-btn {
-  border-radius: 8px;
-  padding: 0.5rem 1.25rem;
-  font-weight: 500;
-  font-size: 0.9rem;
-  border: 1px solid #e5e7eb;
-  background-color: #ffffff;
-  color: #374151;
-  transition: all 0.2s;
-}
-
-.filter-btn:hover {
-  background-color: #f9fafb;
-}
-
-.filter-btn.active {
-  background-color: #111827;
-  color: #ffffff;
-  border-color: #111827;
 }
 
 /* --- Empty State --- */
@@ -251,4 +202,73 @@
   color: #6b7280;
   font-size: 1.1rem;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+/* --- Header Actions Alignment --- */
+.header-actions-container {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.notification-wrapper {
+  position: relative;
+  cursor: pointer;
+  color: #4b5563;
+  transition: color 0.2s;
+}
+
+.notification-wrapper:hover {
+  color: #111827;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* --- Custom Tabs Styling (Horizontal Filters) --- */
+.custom-tabs .nav-link {
+  color: #6b7280;
+  font-weight: 500;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 0.75rem 1.5rem;
+  transition: all 0.2s;
+}
+
+.custom-tabs .nav-link:hover {
+  color: #111827;
+  border-color: #e5e7eb;
+}
+
+.custom-tabs .nav-link.active {
+  color: #111827;
+  font-weight: 700;
+  border-bottom: 2px solid #111827;
+  background-color: transparent;
+}
+
+/* --- Issue Card Styling --- */
+.settings-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  transition: box-shadow 0.2s;
+}
+
+.settings-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
 }

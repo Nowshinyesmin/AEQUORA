@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Siren, Calendar, Vote, LogOut,
-  ThumbsUp, TrendingUp, AlertTriangle, ArrowUp, Trophy, ListFilter
+  ThumbsUp, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Trophy, ListFilter
 } from 'lucide-react';
 import { api } from "../../api/client"; 
 import './CommunityVoting.css';
@@ -23,7 +23,7 @@ const CommunityVoting = () => {
     role: 'Authority'
   });
 
-  // --- 1. Fetch User Data (FIXED VARIABLE NAMES) ---
+  // --- 1. Fetch User Data ---
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -34,9 +34,7 @@ const CommunityVoting = () => {
         }
         const response = await api.get('auth/users/me/');
         setUserInfo({
-          // FIXED: Backend uses 'firstname', not 'first_name'
           firstName: response.data.firstname || '',
-          // FIXED: Backend uses 'lastname', not 'last_name'
           lastName: response.data.lastname || '',
           username: response.data.username || '',
           role: response.data.role || 'Authority'
@@ -73,11 +71,12 @@ const CommunityVoting = () => {
     return fullName || userInfo.username || 'Authority User';
   };
 
+  // UPDATED: Sort based on 'upvotes' instead of 'vote_count'
   const getSortedData = () => {
     const dataCopy = [...votingData];
     return dataCopy.sort((a, b) => {
-      const votesA = a.vote_count || 0;
-      const votesB = b.vote_count || 0;
+      const votesA = a.upvotes || 0;
+      const votesB = b.upvotes || 0;
       return sortOrder === 'desc' ? votesB - votesA : votesA - votesB;
     });
   };
@@ -85,14 +84,17 @@ const CommunityVoting = () => {
   const getDisplayData = () => {
     const sorted = getSortedData();
     if (activeTab === 'top10') {
-      return sorted.sort((a, b) => (b.vote_count || 0) - (a.vote_count || 0)).slice(0, 10);
+      // UPDATED: Filter top 10 by 'upvotes'
+      return sorted.sort((a, b) => (b.upvotes || 0) - (a.upvotes || 0)).slice(0, 10);
     }
     return sorted; 
   };
 
   const displayIssues = getDisplayData();
-  const totalVotes = votingData.reduce((acc, curr) => acc + (curr.vote_count || 0), 0);
-  const topIssue = votingData.length > 0 ? [...votingData].sort((a,b) => b.vote_count - a.vote_count)[0] : null;
+  
+  // UPDATED: Stats based on 'upvotes'
+  const totalVotes = votingData.reduce((acc, curr) => acc + (curr.upvotes || 0), 0);
+  const topIssue = votingData.length > 0 ? [...votingData].sort((a,b) => b.upvotes - a.upvotes)[0] : null;
 
   const getUrgencyClass = (urgency) => {
     const u = (urgency || '').toLowerCase();
@@ -161,7 +163,8 @@ const CommunityVoting = () => {
             <div className="stat-content">
               <h3>Action Required</h3>
               <p className="stat-text-sm">
-                {votingData.filter(i => (i.vote_count > 5) && i.status !== 'Resolved').length} Issues highly voted
+                {/* UPDATED: Filter based on 'upvotes' */}
+                {votingData.filter(i => (i.upvotes > 5) && i.status !== 'Resolved').length} Issues highly voted
               </p>
             </div>
           </div>
@@ -211,7 +214,7 @@ const CommunityVoting = () => {
               <thead>
                 <tr>
                   <th>Rank</th>
-                  <th>Vote Count</th>
+                  <th>Vote Stats</th> {/* Renamed from Vote Count */}
                   <th>Issue Title</th>
                   <th>Category</th>
                   <th>Priority</th>
@@ -229,9 +232,16 @@ const CommunityVoting = () => {
                         </div>
                       </td>
                       <td>
+                        {/* UPDATED: Displays Up and Down votes separately */}
                         <div className="vote-count-cell">
-                          <ArrowUp size={16} className="vote-arrow"/>
-                          <span>{issue.vote_count || 0}</span>
+                          <div className="vote-item up">
+                            <ArrowUp size={16} className="vote-arrow-up"/>
+                            <span>{issue.upvotes || 0}</span>
+                          </div>
+                          <div className="vote-item down">
+                            <ArrowDown size={16} className="vote-arrow-down"/>
+                            <span>{issue.downvotes || 0}</span>
+                          </div>
                         </div>
                       </td>
                       <td>

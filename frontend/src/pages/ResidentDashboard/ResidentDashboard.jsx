@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { 
   LayoutDashboard, AlertCircle, Briefcase, Calendar, Bell, LogOut, 
-  Activity, User, CheckCircle, Clock
+  Activity, User, ThumbsUp 
 } from 'lucide-react';
 import { Row, Col, Container, Badge } from 'react-bootstrap';
 import './ResidentDashboard.css';
@@ -23,8 +23,13 @@ function ResidentDashboard() {
     activities: []
   });
 
+  const [notificationCount, setNotificationCount] = useState(0);
+
   // Fetch All Data
   useEffect(() => {
+    // CLEANUP OLD DATA
+    localStorage.removeItem('resident_notifications');
+
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
@@ -33,17 +38,22 @@ function ResidentDashboard() {
           return;
         }
 
-        // 1. Fetch User Profile
+        // 1. Get User Info & ID
         const userRes = await api.get('auth/users/me/');
         setUserInfo({
-          firstName: userRes.data.firstname || '', // corrected field name from backend
+          firstName: userRes.data.firstname || '', 
           lastName: userRes.data.lastname || '',
           role: 'Resident' 
         });
 
-        // 2. Fetch Dashboard Stats & Activities
+        // 2. Get Dashboard Stats
         const dashRes = await api.get('resident/dashboard-stats/');
         setDashboardData(dashRes.data);
+
+        // 3. SYNCHRONIZED BADGE LOGIC
+        if (userRes.data.userid) {
+          await fetchBadgeCount(userRes.data.userid);
+        }
 
       } catch (error) {
         console.error("Failed to fetch dashboard data", error);
@@ -55,14 +65,43 @@ function ResidentDashboard() {
     fetchData();
   }, [navigate]);
 
+  const fetchBadgeCount = async (userId) => {
+    try {
+      // Fetch DB Notifications
+      const response = await api.get('resident/notifications/');
+      const dbData = response.data.notifications;
+      
+      const mappedDbNotifs = dbData.map(n => ({
+        id: `db-${n.notificationid}`,
+        read: n.isread, 
+        timestamp: new Date(n.createdat).getTime()
+      }));
+
+      // Fetch User-Specific Local Storage
+      const storageKey = `resident_notifications_user_${userId}`;
+      const localData = JSON.parse(localStorage.getItem(storageKey) || '[]');
+      
+      // Merge & Count Unread
+      const merged = [...localData, ...mappedDbNotifs];
+      const totalUnread = merged.filter(n => !n.read).length;
+
+      setNotificationCount(totalUnread);
+    } catch (error) {
+      console.error("Failed to fetch notification count", error);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
   };
 
+  const handleNotificationClick = () => {
+    navigate('/notifications');
+  };
+
   const getDisplayName = () => `${userInfo.firstName} ${userInfo.lastName}`;
 
-  // Helper to format date
   const formatDate = (dateString) => {
     if (!dateString) return "";
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -70,7 +109,6 @@ function ResidentDashboard() {
     });
   };
 
-  // Helper to get Icon based on activity type
   const getActivityIcon = (type) => {
     switch(type) {
       case 'Issue': return <AlertCircle size={18} className="text-danger" />;
@@ -93,6 +131,7 @@ function ResidentDashboard() {
         <nav className="sidebar-nav">
           <Link to="/resident/dashboard" className="nav-link-custom active"><LayoutDashboard size={20} className="nav-icon" />Dashboard</Link>
           <Link to="/report-issue" className="nav-link-custom"><AlertCircle size={20} className="nav-icon" />Report Issue</Link>
+          <Link to="/community-voting" className="nav-link-custom"><ThumbsUp size={20} className="nav-icon" />Community Voting</Link>
           <Link to="/book-service" className="nav-link-custom"><Briefcase size={20} className="nav-icon" />Book Service</Link>
           <Link to="/events" className="nav-link-custom"><Calendar size={20} className="nav-icon" />Events</Link>
           <Link to="/sos" className="nav-link-custom"><Bell size={20} className="nav-icon" />Emergency SOS</Link>
@@ -105,6 +144,17 @@ function ResidentDashboard() {
 
       {/* Main Content */}
       <main className="dashboard-main">
+        
+        {/* HEADER ACTIONS (Notification Bell) */}
+        <div className="header-right-actions">
+           <div className="notification-wrapper" onClick={handleNotificationClick}>
+             <Bell size={24} />
+             {notificationCount > 0 && (
+               <span className="notification-badge">{notificationCount}</span>
+             )}
+           </div>
+        </div>
+
         <Container fluid className="p-0">
           
           <div className="page-header-mb">

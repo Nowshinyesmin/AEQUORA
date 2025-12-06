@@ -29,12 +29,12 @@
   width: calc(100% - 260px);
 }
 
-/* --- Header Section (Updated for Vertical Stacking) --- */
+/* --- Header Section --- */
 .page-header-block {
   margin-bottom: 2rem;
   display: flex;
-  flex-direction: column; /* Force vertical stack */
-  align-items: flex-start; /* Align left */
+  flex-direction: column;
+  align-items: flex-start;
   gap: 0.25rem;
 }
 
@@ -113,7 +113,7 @@
   max-width: 180px;
 }
 
-/* --- Controls & Tabs (NEW) --- */
+/* --- Controls & Tabs --- */
 .controls-container {
   display: flex;
   justify-content: space-between;
@@ -282,16 +282,34 @@
   color: #d97706;
 }
 
+/* UPDATED: Vote Cell Styles */
 .vote-count-cell {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 1rem; /* Space between the two counts */
   font-weight: 700;
   color: #111827;
 }
 
-.vote-arrow {
+.vote-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.vote-item.up {
+  color: #16a34a; /* Green for Up */
+}
+
+.vote-item.down {
+  color: #dc2626; /* Red for Down */
+}
+
+.vote-arrow-up {
   color: #16a34a;
+}
+.vote-arrow-down {
+  color: #dc2626;
 }
 
 /* --- Badges --- */

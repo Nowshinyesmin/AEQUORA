@@ -304,3 +304,100 @@
 .btn-save:hover {
   background-color: #000000;
 }
+/* --- Notification Bell Styling (Added) --- */
+.header-right-actions {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.notification-wrapper {
+  position: relative;
+  cursor: pointer;
+  color: #4b5563;
+  transition: color 0.2s;
+}
+
+.notification-wrapper:hover {
+  color: #111827;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444; /* Red color */
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* --- Community Voting List Styling (Added) --- */
+.voting-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+  display: flex;
+  gap: 1.5rem;
+  transition: box-shadow 0.2s;
+}
+
+.voting-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.vote-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 50px;
+}
+
+.vote-btn {
+  background: none;
+  border: 1px solid #e5e7eb; /* Subtle border */
+  border-radius: 8px;
+  padding: 6px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+.vote-btn.upvoted {
+  background-color: #dcfce7; /* Light Green */
+  color: #166534;
+  border-color: #166534;
+}
+
+.vote-btn.downvoted {
+  background-color: #fee2e2; /* Light Red */
+  color: #991b1b;
+  border-color: #991b1b;
+}
+
+.vote-count {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+}

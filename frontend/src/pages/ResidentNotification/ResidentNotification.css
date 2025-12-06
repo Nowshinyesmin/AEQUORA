@@ -1,0 +1,165 @@
+/* frontend/src/pages/ResidentNotification/ResidentNotification.css */
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  font-family: 'Inter', sans-serif;
+}
+
+.main-content {
+  margin-left: 260px;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+  flex-grow: 1;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.page-title h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* --- ACTION BUTTONS (Updated) --- */
+.header-right-actions {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.mark-read-btn {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.mark-read-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+/* --- Notifications List --- */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 900px;
+  margin-top: 1rem;
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.notification-card:hover {
+  background-color: #f9fafb;
+}
+
+.notification-card.unread {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+
+.notification-card.read {
+  opacity: 0.8;
+}
+
+.notif-icon-box {
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+}
+
+.notif-content {
+  flex-grow: 1;
+}
+
+.notif-message {
+  margin: 0;
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.notif-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.2rem;
+  display: block;
+}
+
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #0284c7;
+  border-radius: 50%;
+  margin-left: 1rem;
+}
+
+.empty-state-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.notification-wrapper {
+  position: relative;
+  cursor: pointer;
+  color: #4b5563;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+.notification-wrapper:hover { color: #111827; }
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}

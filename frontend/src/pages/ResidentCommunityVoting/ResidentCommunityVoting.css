@@ -1,0 +1,154 @@
+/* frontend/src/pages/ResidentCommunityVoting/ResidentCommunityVoting.css */
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.voting-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.voting-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.voting-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.voting-content {
+  flex-grow: 1;
+}
+
+.voting-title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #111827;
+  margin-bottom: 0.5rem;
+}
+
+.voting-desc {
+  color: #4b5563;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.voting-meta {
+  display: flex;
+  gap: 1.5rem;
+  color: #9ca3af;
+  font-size: 0.85rem;
+}
+
+/* --- Horizontal Vote Controls --- */
+.vote-controls-horizontal {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.vote-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.vote-btn {
+  background: none;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 8px;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.vote-btn:hover {
+  background-color: #f3f4f6;
+  color: #111827;
+}
+
+/* Active State - Turns Red on Click */
+.vote-btn.active-red {
+  background-color: #fee2e2; /* Light Red Background */
+  color: #dc2626;            /* Red Icon */
+  border-color: #dc2626;     /* Red Border */
+}
+
+.vote-label {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.vote-count-value {
+  background-color: #f3f4f6;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.empty-state-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #6b7280;
+}
+
+.header-right-actions {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.notification-wrapper {
+  position: relative;
+  cursor: pointer;
+  color: #4b5563;
+  transition: color 0.2s;
+}
+
+.notification-wrapper:hover {
+  color: #111827;
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}

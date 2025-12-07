@@ -1,6 +1,6 @@
 // frontend/src/pages/ViewCommunities/ViewCommunities.jsx
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -14,15 +14,14 @@ import {
 } from "lucide-react";
 import { Row, Col, Button, Table } from "react-bootstrap";
 import "./ViewCommunities.css";
+import { api } from "../../api/client";
 
 function ViewCommunities() {
   const navigate = useNavigate();
 
-  // dummy local state – later you can fill from backend
   const [communities, setCommunities] = useState([]);
-
-
   const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,12 +36,29 @@ function ViewCommunities() {
     setSearchTerm(e.target.value);
   };
 
+  // 🔹 Fetch all communities from backend on mount
+  useEffect(() => {
+    const fetchCommunities = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("admin/communities/"); // => /api/admin/communities/
+        setCommunities(res.data || []);
+      } catch (err) {
+        console.error("Failed to load communities:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunities();
+  }, []);
+
   // filter by Community Name (startsWith, case-insensitive)
   const filteredCommunities = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
     if (!term) return communities;
     return communities.filter((c) =>
-      c.communityName.toLowerCase().startsWith(term)
+      (c.communityName || "").toLowerCase().startsWith(term)
     );
   }, [communities, searchTerm]);
 
@@ -53,10 +69,26 @@ function ViewCommunities() {
     });
   };
 
-  const handleDelete = (communityID) => {
-    console.log("Delete community", communityID);
-    // later: call backend then update state:
-    // setCommunities(prev => prev.filter(c => c.communityID !== communityID));
+  const handleDelete = async (communityID) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this community?"
+    );
+    if (!confirmed) return;
+
+    try {
+      await api.delete(`admin/communities/${communityID}/`);
+
+      // Remove from UI list
+      setCommunities((prev) =>
+        prev.filter((c) => c.communityID !== communityID)
+      );
+
+      // ✅ success notification
+      alert("Community deleted successfully.");
+    } catch (error) {
+      console.error("Delete community error:", error);
+      alert(error?.response?.data?.error || "Failed to delete community.");
+    }
   };
 
   return (
@@ -159,7 +191,13 @@ function ViewCommunities() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredCommunities.length === 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="8" className="empty-row">
+                          Loading communities...
+                        </td>
+                      </tr>
+                    ) : filteredCommunities.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="empty-row">
                           No communities found for that name.
@@ -179,8 +217,8 @@ function ViewCommunities() {
                             <div className="action-buttons">
                               <Button
                                 size="sm"
-                                variant="outline-secondary"
-                                className="btn-table"
+                                variant="warning"
+                                className="btn-table btn-edit"
                                 onClick={() => handleEdit(c)}
                               >
                                 <Pencil size={15} className="me-1" />
@@ -188,8 +226,8 @@ function ViewCommunities() {
                               </Button>
                               <Button
                                 size="sm"
-                                variant="outline-danger"
-                                className="btn-table"
+                                variant="danger"
+                                className="btn-table btn-delete"
                                 onClick={() =>
                                   handleDelete(c.communityID)
                                 }

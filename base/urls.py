@@ -2,6 +2,16 @@
 from django.urls import path
 import base.signals
 from .views import (
+    AdminProfileView,
+    AdminPasswordChangeView,
+    AdminCreateCommunityView,
+    AdminCommunityListView,
+    AdminCommunityDetailView,
+    AdminUserListView,
+    AdminUserStatusToggleView,
+    AdminDashboardStatsView,
+
+
     RegisterView, 
     CustomLoginView,
     UserMeView,
@@ -104,4 +114,22 @@ urlpatterns = [
     path('authority/events/<int:pk>/action/', AuthorityEventActionView.as_view(), name='auth_event_action'),
     path('authority/events/<int:pk>/', AuthorityEventActionView.as_view(), name='auth_event_delete'),
     path('authority/voting-results/', VotingResultsView.as_view(), name='voting_results'),
+
+     # --- Hard-coded Admin profile & security ---
+    path('admin/profile/', AdminProfileView.as_view(), name='admin_profile'),
+    path('admin/change-password/', AdminPasswordChangeView.as_view(), name='admin_change_password'),
+    path("admin/create-community/", AdminCreateCommunityView.as_view(), name="admin-create-community"),
+    path("admin/communities/", AdminCommunityListView.as_view(), name="admin-community-list"),
+    path("admin/communities/<int:pk>/", AdminCommunityDetailView.as_view(), name="admin-community-detail"),
+    path("admin/users/", AdminUserListView.as_view(), name="admin-user-list"),
+    path(
+        "admin/users/<int:pk>/toggle-status/",
+        AdminUserStatusToggleView.as_view(),
+        name="admin-user-toggle-status",
+    ),
+    path("admin/dashboard-stats/", AdminDashboardStatsView.as_view(), name="admin-dashboard-stats"),
+
+
+
+
 ]

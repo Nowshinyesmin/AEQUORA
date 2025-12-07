@@ -266,7 +266,7 @@ body,
 .table-responsive-custom td {
   padding: 0.6rem 0.75rem;
   font-size: 0.9rem;
-  color: #111827;              /* 🔥 force dark text */
+  color: #111827; /* 🔥 force dark text */
   border-bottom: 1px solid #e5e7eb;
   white-space: nowrap;
 }
@@ -286,6 +286,31 @@ body,
 .btn-table {
   font-size: 0.8rem;
   padding: 0.2rem 0.5rem;
+}
+
+/* 🔹 Specific colors for Edit (yellow) and Delete (red) buttons */
+.btn-edit {
+  background-color: #facc15; /* yellow */
+  border-color: #facc15;
+  color: #111827;
+}
+
+.btn-edit:hover {
+  background-color: #f59e0b;
+  border-color: #f59e0b;
+  color: #111827;
+}
+
+.btn-delete {
+  background-color: #ef4444; /* red */
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.btn-delete:hover {
+  background-color: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
 }
 
 /* responsive */

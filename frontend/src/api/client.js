@@ -2,8 +2,18 @@
 import axios from "axios";
 
 export const api = axios.create({
-  baseURL: "http://127.0.0.1:8000/api/",
+  baseURL: "http://127.0.0.1:8000/api",
 });
+
+// Attach Authorization header automatically
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem("token");     // frontend stores admin token under "token"
+  if (token) {
+    config.headers["Authorization"] = `Token ${token}`;
+  }
+  return config;
+});
+
 
 // --- THE FIX: Request Interceptor ---
 // This runs before every single API request.

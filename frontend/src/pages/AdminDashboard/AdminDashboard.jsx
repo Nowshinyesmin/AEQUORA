@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminDashboard/AdminDashboard.jsx
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -11,10 +11,17 @@ import {
   Activity,
 } from "lucide-react";
 import { Container } from "react-bootstrap";
+import { api } from "../../api/client"; // ✅ make sure this path matches your project
 import "./AdminDashboard.css";
 
 function AdminDashboard() {
   const navigate = useNavigate();
+
+  const [stats, setStats] = useState({
+    totalCommunities: 0,
+    totalUsers: 0,
+    pendingRequests: 0,
+  });
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -25,9 +32,23 @@ function AdminDashboard() {
     navigate("/admin/profile");
   };
 
+  // Fetch dashboard stats when page loads
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await api.get("/admin/dashboard-stats/");
+        setStats(res.data || {});
+      } catch (error) {
+        console.error("Failed to load admin dashboard stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
   return (
     <div className="dashboard-root">
-      {/* Sidebar (same structure as Resident) */}
+      {/* Sidebar */}
       <aside className="dashboard-sidebar">
         <div className="sidebar-brand">Aequora</div>
 
@@ -37,31 +58,26 @@ function AdminDashboard() {
         </div>
 
         <nav className="sidebar-nav">
-          {/* Dashboard */}
           <Link to="/AdminDashboard" className="nav-link-custom active">
             <LayoutDashboard size={20} className="nav-icon" />
             Dashboard
           </Link>
 
-          {/* Add Community */}
           <Link to="/admin/add-community" className="nav-link-custom">
             <Building2 size={20} className="nav-icon" />
             Add Community
           </Link>
 
-          {/* Manage Community */}
           <Link to="/admin/communities" className="nav-link-custom">
             <ClipboardList size={20} className="nav-icon" />
             Manage Community
           </Link>
 
-          {/* Manage Users */}
           <Link to="/admin/users" className="nav-link-custom">
             <Users size={20} className="nav-icon" />
             Manage Users
           </Link>
 
-          {/* Profile */}
           <button className="nav-link-custom" onClick={goToProfile}>
             <Users size={20} className="nav-icon" />
             Profile
@@ -100,7 +116,9 @@ function AdminDashboard() {
                 <span className="stat-title">Total Communities</span>
                 <Building2 size={22} className="text-primary" />
               </div>
-              <div className="stat-value">0</div>
+              <div className="stat-value">
+                {stats.totalCommunities ?? 0}
+              </div>
             </div>
 
             <div className="stat-card">
@@ -108,7 +126,7 @@ function AdminDashboard() {
                 <span className="stat-title">Total Users</span>
                 <Users size={22} className="text-success" />
               </div>
-              <div className="stat-value">0</div>
+              <div className="stat-value">{stats.totalUsers ?? 0}</div>
             </div>
 
             <div className="stat-card">
@@ -116,7 +134,9 @@ function AdminDashboard() {
                 <span className="stat-title">Pending Requests</span>
                 <ClipboardList size={22} className="text-warning" />
               </div>
-              <div className="stat-value">0</div>
+              <div className="stat-value">
+                {stats.pendingRequests ?? 0}
+              </div>
             </div>
           </div>
 

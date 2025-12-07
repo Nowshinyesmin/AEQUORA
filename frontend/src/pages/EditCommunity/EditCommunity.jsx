@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link, useParams } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import "./EditCommunity.css";
+import { api } from "../../api/client";
 
 function EditCommunity() {
   const navigate = useNavigate();
@@ -32,6 +33,9 @@ function EditCommunity() {
     }
   );
 
+  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(!passedCommunity);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
@@ -46,12 +50,62 @@ function EditCommunity() {
     setCommunity((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  // If user opens this page directly (no route state), fetch from backend
+  useEffect(() => {
+    const fetchCommunity = async () => {
+      if (passedCommunity) return; // already have it
+
+      try {
+        setLoading(true);
+        const res = await api.get(`admin/communities/${id}/`);
+        const data = res.data;
+        setCommunity({
+          communityID: data.communityID,
+          communityName: data.communityName,
+          city: data.city,
+          district: data.district,
+          thana: data.thana,
+          postalCode: data.postalCode,
+          createdAt: data.createdAt,
+        });
+      } catch (err) {
+        console.error("Failed to load community:", err);
+        alert(
+          err?.response?.data?.error || "Failed to load community."
+        );
+        navigate("/admin/communities");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunity();
+  }, [id, passedCommunity, navigate]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Updated community:", community);
-    // later: api.put(`/community/${community.communityID}/`, community)
-    // then navigate back:
-    // navigate("/admin/communities");
+
+    try {
+      setSaving(true);
+      await api.put(`admin/communities/${community.communityID}/`, {
+        name: community.communityName,
+        city: community.city,
+        district: community.district,
+        thana: community.thana,
+        postalCode: community.postalCode,
+      });
+
+      alert("Community updated successfully.");
+      navigate("/admin/communities");
+    } catch (error) {
+      console.error("Update community error:", error);
+      alert(
+        error?.response?.data?.error ||
+          "Failed to update community."
+      );
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -129,101 +183,109 @@ function EditCommunity() {
                 </span>
               </div>
 
-              <Form onSubmit={handleSubmit}>
-                <Form.Group className="mb-3" controlId="communityName">
-                  <Form.Label>Community Name</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="communityName"
-                    value={community.communityName}
-                    onChange={handleChange}
-                    required
-                  />
-                </Form.Group>
+              {loading ? (
+                <div className="p-3">Loading community...</div>
+              ) : (
+                <Form onSubmit={handleSubmit}>
+                  <Form.Group className="mb-3" controlId="communityName">
+                    <Form.Label>Community Name</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="communityName"
+                      value={community.communityName}
+                      onChange={handleChange}
+                      required
+                    />
+                  </Form.Group>
 
-                <Row className="g-3">
-                  <Col md={6}>
-                    <Form.Group controlId="city">
-                      <Form.Label>City</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="city"
-                        value={community.city}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
+                  <Row className="g-3">
+                    <Col md={6}>
+                      <Form.Group controlId="city">
+                        <Form.Label>City</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="city"
+                          value={community.city}
+                          onChange={handleChange}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
 
-                  <Col md={6}>
-                    <Form.Group controlId="district">
-                      <Form.Label>District</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="district"
-                        value={community.district}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                    <Col md={6}>
+                      <Form.Group controlId="district">
+                        <Form.Label>District</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="district"
+                          value={community.district}
+                          onChange={handleChange}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-                <Row className="g-3 mt-1">
-                  <Col md={6}>
-                    <Form.Group controlId="thana">
-                      <Form.Label>Thana</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="thana"
-                        value={community.thana}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
+                  <Row className="g-3 mt-1">
+                    <Col md={6}>
+                      <Form.Group controlId="thana">
+                        <Form.Label>Thana</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="thana"
+                          value={community.thana}
+                          onChange={handleChange}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
 
-                  <Col md={6}>
-                    <Form.Group controlId="postalCode">
-                      <Form.Label>Postal Code</Form.Label>
-                      <Form.Control
-                        type="text"
-                        name="postalCode"
-                        value={community.postalCode}
-                        onChange={handleChange}
-                        required
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+                    <Col md={6}>
+                      <Form.Group controlId="postalCode">
+                        <Form.Label>Postal Code</Form.Label>
+                        <Form.Control
+                          type="text"
+                          name="postalCode"
+                          value={community.postalCode}
+                          onChange={handleChange}
+                          required
+                        />
+                      </Form.Group>
+                    </Col>
+                  </Row>
 
-                <Form.Group className="mt-3 mb-2" controlId="createdAt">
-                  <Form.Label>Created At</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="createdAt"
-                    value={community.createdAt}
-                    disabled
-                    readOnly
-                  />
-                </Form.Group>
+                  <Form.Group className="mt-3 mb-2" controlId="createdAt">
+                    <Form.Label>Created At</Form.Label>
+                    <Form.Control
+                      type="text"
+                      name="createdAt"
+                      value={community.createdAt}
+                      disabled
+                      readOnly
+                    />
+                  </Form.Group>
 
-                <div className="form-actions">
-                  <Button
-                    type="button"
-                    variant="outline-secondary"
-                    className="btn-outline-rounded me-2"
-                    onClick={() => navigate("/admin/communities")}
-                  >
-                    Cancel
-                  </Button>
+                  <div className="form-actions">
+                    <Button
+                      type="button"
+                      variant="outline-secondary"
+                      className="btn-outline-rounded me-2"
+                      onClick={() => navigate("/admin/communities")}
+                    >
+                      Cancel
+                    </Button>
 
-                  <Button type="submit" className="btn-primary-rounded">
-                    <MapPin size={18} className="me-2" />
-                    Save Changes
-                  </Button>
-                </div>
-              </Form>
+                    <Button
+                      type="submit"
+                      className="btn-primary-rounded"
+                      disabled={saving}
+                    >
+                      <MapPin size={18} className="me-2" />
+                      {saving ? "Saving..." : "Save Changes"}
+                    </Button>
+                  </div>
+                </Form>
+              )}
             </div>
           </Col>
         </Row>

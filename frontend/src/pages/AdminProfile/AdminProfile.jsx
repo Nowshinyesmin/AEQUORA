@@ -1,6 +1,6 @@
 // frontend/src/pages/AdminProfile/AdminProfile.jsx
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -11,20 +11,20 @@ import {
   Shield,
   User as UserIcon,
 } from "lucide-react";
-import { Row, Col, Form, Button } from "react-bootstrap";
+import { Row, Col, Form, Button, Alert } from "react-bootstrap";
 import "./AdminProfile.css";
+import { api } from "../../api/client";
 
 function AdminProfile() {
   const navigate = useNavigate();
 
-  // dummy local state – later you can fill from backend
   const [profile, setProfile] = useState({
     firstName: "",
     lastName: "",
     email: "",
     phone: "",
     dob: "",
-    gender: "",
+    gender: "Male",
   });
 
   const [passwords, setPasswords] = useState({
@@ -33,13 +33,46 @@ function AdminProfile() {
     confirmPassword: "",
   });
 
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ----------------- LOAD PROFILE FROM BACKEND -----------------
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        setLoadingProfile(true);
+        setError("");
+        const res = await api.get("/admin/profile/");
+        const data = res.data || {};
+
+        setProfile({
+          firstName: data.first_name || "Admin",
+          lastName: data.last_name || "User",
+          email: data.email || "aequora@gmail.com",
+          phone: data.phone || "",
+          dob: data.dob || "",
+          gender: data.gender || "Male",
+        });
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load admin profile.");
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     navigate("/login");
   };
 
   const goToProfile = () => {
-    // already on profile, but keeps the header/profile circle behaviour
     navigate("/admin/profile");
   };
 
@@ -53,16 +86,68 @@ function AdminProfile() {
     setPasswords((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSaveProfile = (e) => {
+  // ----------------- SAVE PROFILE -----------------
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    // later call your backend here with api.put(...)
-    console.log("Save profile", profile);
+    setError("");
+    setSuccess("");
+
+    try {
+      setSavingProfile(true);
+      await api.put("/admin/profile/", {
+        first_name: profile.firstName,
+        last_name: profile.lastName,
+        phone: profile.phone,
+        dob: profile.dob,
+        gender: profile.gender,
+        // email is hardcoded for login, so we don't send it to change
+      });
+
+      setSuccess("Profile updated successfully.");
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.error || "Failed to update profile. Try again.";
+      setError(msg);
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
-  const handleUpdatePassword = (e) => {
+  // ----------------- UPDATE PASSWORD -----------------
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
-    // later call your backend here with api.post(...)
-    console.log("Update password", passwords);
+    setError("");
+    setSuccess("");
+
+    if (passwords.newPassword !== passwords.confirmPassword) {
+      setError("New password and confirm password do not match.");
+      return;
+    }
+
+    try {
+      setUpdatingPassword(true);
+      await api.post("/admin/change-password/", {
+        currentPassword: passwords.currentPassword,
+        newPassword: passwords.newPassword,
+        confirmPassword: passwords.confirmPassword,
+      });
+
+      setSuccess("Password updated successfully.");
+      setPasswords({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (err) {
+      console.error(err);
+      const msg =
+        err?.response?.data?.error ||
+        "Failed to update password. Please check your current password.";
+      setError(msg);
+    } finally {
+      setUpdatingPassword(false);
+    }
   };
 
   return (
@@ -72,30 +157,28 @@ function AdminProfile() {
         <div className="sidebar-brand">Aequora</div>
 
         <div className="user-profile-section">
-          <div className="user-name-display">Admin User</div>
+          <div className="user-name-display">
+            {profile.firstName || "Admin"} {profile.lastName || "User"}
+          </div>
           <div className="user-role-display">Admin</div>
         </div>
 
         <nav className="sidebar-nav">
-          {/* Dashboard */}
           <Link to="/AdminDashboard" className="nav-link-custom">
             <LayoutDashboard size={20} className="nav-icon" />
             Dashboard
           </Link>
 
-          {/* Add Community */}
           <Link to="/admin/add-community" className="nav-link-custom">
             <Building2 size={20} className="nav-icon" />
             Add Community
           </Link>
 
-          {/* Manage Communities */}
           <Link to="/admin/communities" className="nav-link-custom">
             <ClipboardList size={20} className="nav-icon" />
             Manage Communities
           </Link>
 
-          {/* Manage Users */}
           <Link to="/admin/users" className="nav-link-custom">
             <Users size={20} className="nav-icon" />
             Manage Users
@@ -132,6 +215,18 @@ function AdminProfile() {
           </p>
         </div>
 
+        {/* alerts */}
+        {error && (
+          <div className="mb-3">
+            <Alert variant="danger">{error}</Alert>
+          </div>
+        )}
+        {success && (
+          <div className="mb-3">
+            <Alert variant="success">{success}</Alert>
+          </div>
+        )}
+
         {/* PROFILE SECTIONS */}
         <Row className="g-4">
           {/* PERSONAL INFO – full width, on top */}
@@ -157,6 +252,7 @@ function AdminProfile() {
                         name="firstName"
                         value={profile.firstName}
                         onChange={handleProfileChange}
+                        disabled={loadingProfile}
                       />
                     </Form.Group>
                   </Col>
@@ -169,6 +265,7 @@ function AdminProfile() {
                         name="lastName"
                         value={profile.lastName}
                         onChange={handleProfileChange}
+                        disabled={loadingProfile}
                       />
                     </Form.Group>
                   </Col>
@@ -180,7 +277,7 @@ function AdminProfile() {
                         type="email"
                         name="email"
                         value={profile.email}
-                        onChange={handleProfileChange}
+                        readOnly // login email is fixed
                       />
                     </Form.Group>
                   </Col>
@@ -193,6 +290,7 @@ function AdminProfile() {
                         name="phone"
                         value={profile.phone}
                         onChange={handleProfileChange}
+                        disabled={loadingProfile}
                       />
                     </Form.Group>
                   </Col>
@@ -205,6 +303,7 @@ function AdminProfile() {
                         name="dob"
                         value={profile.dob}
                         onChange={handleProfileChange}
+                        disabled={loadingProfile}
                       />
                     </Form.Group>
                   </Col>
@@ -216,6 +315,7 @@ function AdminProfile() {
                         name="gender"
                         value={profile.gender}
                         onChange={handleProfileChange}
+                        disabled={loadingProfile}
                       >
                         <option>Male</option>
                         <option>Female</option>
@@ -226,8 +326,12 @@ function AdminProfile() {
                 </Row>
 
                 <div className="profile-actions">
-                  <Button type="submit" className="btn-primary-rounded">
-                    Save Changes
+                  <Button
+                    type="submit"
+                    className="btn-primary-rounded"
+                    disabled={savingProfile || loadingProfile}
+                  >
+                    {savingProfile ? "Saving..." : "Save Changes"}
                   </Button>
                 </div>
               </Form>
@@ -279,8 +383,12 @@ function AdminProfile() {
                 </Form.Group>
 
                 <div className="profile-actions">
-                  <Button type="submit" className="btn-outline-rounded">
-                    Update Password
+                  <Button
+                    type="submit"
+                    className="btn-outline-rounded"
+                    disabled={updatingPassword}
+                  >
+                    {updatingPassword ? "Updating..." : "Update Password"}
                   </Button>
                 </div>
               </Form>

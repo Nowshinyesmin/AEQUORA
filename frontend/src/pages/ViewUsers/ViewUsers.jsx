@@ -1,6 +1,4 @@
-// frontend/src/pages/ViewUsers/ViewUsers.jsx
-
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import {
   LayoutDashboard,
@@ -9,22 +7,20 @@ import {
   Users,
   LogOut,
   Search,
-  Eye,
   UserX,
 } from "lucide-react";
 import { Row, Col, Button, Table } from "react-bootstrap";
 import "./ViewUsers.css";
+import { api } from "../../api/client";
 
 function ViewUsers() {
   const navigate = useNavigate();
 
-  //  Dummy data – later replace with backend data
   const [users, setUsers] = useState([]);
-
-
   const [searchTerm, setSearchTerm] = useState("");
   const [communityFilter, setCommunityFilter] = useState("All");
   const [roleFilter, setRoleFilter] = useState("All");
+  const [loading, setLoading] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -35,30 +31,38 @@ function ViewUsers() {
     navigate("/admin/profile");
   };
 
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
-  };
+  const handleSearchChange = (e) => setSearchTerm(e.target.value);
+  const handleCommunityChange = (e) => setCommunityFilter(e.target.value);
+  const handleRoleChange = (e) => setRoleFilter(e.target.value);
 
-  const handleCommunityChange = (e) => {
-    setCommunityFilter(e.target.value);
-  };
+  // Fetch all users from backend on mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        setLoading(true);
+        const res = await api.get("admin/users/");
+        setUsers(res.data || []);
+      } catch (err) {
+        console.error("Failed to load users:", err);
+        alert("Failed to load users.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  const handleRoleChange = (e) => {
-    setRoleFilter(e.target.value);
-  };
+    fetchUsers();
+  }, []);
 
-  // 🔹 Distinct communities from current user list
+  // Distinct community options
   const communityOptions = useMemo(() => {
     const set = new Set();
     users.forEach((u) => {
-      if (u.communityName && u.communityName !== "-") {
-        set.add(u.communityName);
-      }
+      if (u.communityName && u.communityName !== "-") set.add(u.communityName);
     });
     return Array.from(set);
   }, [users]);
 
-  // 🔍 search + filter by community + filter by role
+  // Apply search + filters
   const filteredUsers = useMemo(() => {
     const term = searchTerm.trim().toLowerCase();
 
@@ -77,19 +81,30 @@ function ViewUsers() {
     });
   }, [users, searchTerm, communityFilter, roleFilter]);
 
-  const handleView = (userID) => {
-    console.log("View user", userID);
-    // later: navigate(`/admin/users/${userID}`);
-  };
-
-  const handleToggleStatus = (userID) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.userID === userID
-          ? { ...u, status: u.status === "Active" ? "Inactive" : "Active" }
-          : u
-      )
+  // Delete / deactivate user (still using toggle-status endpoint)
+  const handleToggleStatus = async (userID) => {
+    const confirmed = window.confirm(
+      "Are you sure you want to change this user's status?"
     );
+    if (!confirmed) return;
+
+    try {
+      const res = await api.post(`admin/users/${userID}/toggle-status/`);
+      const newStatus = res.data?.status;
+
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.userID === userID ? { ...u, status: newStatus } : u
+        )
+      );
+
+      alert(`User status updated to ${newStatus}.`);
+    } catch (error) {
+      console.error("Toggle status error:", error);
+      alert(
+        error?.response?.data?.error || "Failed to update user status."
+      );
+    }
   };
 
   return (
@@ -159,7 +174,6 @@ function ViewUsers() {
           <Col xs={12}>
             <div className="table-card">
               <div className="table-card-header">
-                {/* 🔽 search + filters on the left */}
                 <div className="filters-row">
                   <div className="search-wrapper">
                     <Search size={18} className="search-icon" />
@@ -192,11 +206,12 @@ function ViewUsers() {
                   >
                     <option value="All">All Roles</option>
                     <option value="Resident">Resident</option>
+                    <option value="ServiceProvider">Service Provider</option>
+                    <option value="Authority">Authority</option>
                     <option value="Admin">Admin</option>
                   </select>
                 </div>
 
-                {/* meta text on the right */}
                 <div className="table-meta">
                   <span>
                     Showing {filteredUsers.length} of {users.length} users
@@ -215,11 +230,17 @@ function ViewUsers() {
                       <th>Community</th>
                       <th>Status</th>
                       <th>Created At</th>
-                      <th style={{ width: "160px" }}>Actions</th>
+                      <th style={{ width: "120px" }}>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.length === 0 ? (
+                    {loading ? (
+                      <tr>
+                        <td colSpan="8" className="empty-row">
+                          Loading users...
+                        </td>
+                      </tr>
+                    ) : filteredUsers.length === 0 ? (
                       <tr>
                         <td colSpan="8" className="empty-row">
                           No users found for that search/filter.
@@ -249,21 +270,14 @@ function ViewUsers() {
                             <div className="action-buttons">
                               <Button
                                 size="sm"
-                                variant="outline-secondary"
-                                className="btn-table"
-                                onClick={() => handleView(u.userID)}
-                              >
-                                <Eye size={15} className="me-1" />
-                                View
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant={
+                                className={`btn-table ${
                                   u.status === "Active"
-                                    ? "outline-danger"
-                                    : "outline-success"
+                                    ? "btn-delete"
+                                    : "btn-activate"
+                                }`}
+                                variant={
+                                  u.status === "Active" ? "danger" : "success"
                                 }
-                                className="btn-table"
                                 onClick={() => handleToggleStatus(u.userID)}
                               >
                                 <UserX size={15} className="me-1" />

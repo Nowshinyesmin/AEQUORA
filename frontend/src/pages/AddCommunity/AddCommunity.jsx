@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Row, Col, Form, Button } from "react-bootstrap";
 import "./AddCommunity.css";
+import { api } from "../../api/client";
 
 function AddCommunity() {
   const navigate = useNavigate();
@@ -22,6 +23,8 @@ function AddCommunity() {
     thana: "",
     postalCode: "",
   });
+
+  const [submitting, setSubmitting] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,10 +40,41 @@ function AddCommunity() {
     setCommunity((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // TODO: connect to backend later with api.post("/community/", community)
-    console.log("Add community:", community);
+
+    try {
+      setSubmitting(true);
+
+      await api.post("admin/create-community/", {
+        name: community.name,
+        city: community.city,
+        district: community.district,
+        thana: community.thana,
+        postalCode: community.postalCode,
+      });
+
+      alert("Community created successfully!");
+
+      // optional: reset the form
+      setCommunity({
+        name: "",
+        city: "",
+        district: "",
+        thana: "",
+        postalCode: "",
+      });
+
+      // 🔹 Redirect to ViewCommunities page
+      navigate("/admin/communities");
+    } catch (error) {
+      console.error("Create community error:", error);
+      const msg =
+        error?.response?.data?.error || "Failed to create community.";
+      alert(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -194,9 +228,13 @@ function AddCommunity() {
                 </Row>
 
                 <div className="form-actions">
-                  <Button type="submit" className="btn-primary-rounded">
+                  <Button
+                    type="submit"
+                    className="btn-primary-rounded"
+                    disabled={submitting}
+                  >
                     <MapPin size={18} className="me-2" />
-                    Create Community
+                    {submitting ? "Creating..." : "Create Community"}
                   </Button>
                 </div>
               </Form>

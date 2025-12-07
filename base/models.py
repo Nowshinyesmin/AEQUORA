@@ -171,7 +171,7 @@ class Event(models.Model):
     date = models.DateField()
     time = models.TimeField()
     location = models.CharField(max_length=255, blank=True, null=True)
-    category = models.CharField(max_length=8)
+    category = models.CharField(max_length=100)
     status = models.CharField(max_length=9, blank=True, null=True)
     createdat = models.DateTimeField(db_column='createdAt', auto_now_add=True)
 

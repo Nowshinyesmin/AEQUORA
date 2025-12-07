@@ -12,28 +12,35 @@ from .views import (
     AdminDashboardStatsView,
 
 
+    # --- Authentication & Core ---
     RegisterView, 
     CustomLoginView,
+    ChangePasswordView,
     UserMeView,
+    CommunityListView,
+    DepartmentListView,
+
+    # --- Resident Views ---
+    ResidentDashboardView,
     EmergencySOSView,
     IssueReportView,
     EventListView,
     ResidentPendingEventsView,
     EventParticipationView,
+    EventRequestView,
     ServiceListView,
     BookingView,
     BookingDetailView,
-    CommunityListView,
-    ResidentDashboardView,
-    EventRequestView,
-    DepartmentListView,
+    CommunityIssueListView,
+    IssueVoteView,
+    NotificationView,
 
-    # Bkash Payment Integration
+    # --- Bkash Payment Integration ---
     BkashInitiateView,
     BkashCallbackView,
     BkashQueryPaymentView,
 
-    # Authority's Backend
+    # --- Authority Views ---
     AuthorityDashboardStatsView,
     AuthorityIssueListView,
     AuthorityIssueDetailView,
@@ -45,52 +52,48 @@ from .views import (
     AuthorityEventRequestsView,
     AuthorityEventActionView,
 
-    # Community & Notification
-    CommunityIssueListView,
-    IssueVoteView,
-    NotificationView,
-
-    # --- NEW IMPORT ---
-    ChangePasswordView
+    # --- Service Provider Views (Added from File 2) ---
+    ProviderDashboardStatsView, 
+    ProviderServiceManageView, 
+    ProviderServiceDetailView,
+    ProviderBookingManageView, 
+    ProviderBookingStatusUpdateView, 
+    ProviderProfileView,
+    ProviderReviewsListView
 )
 
 urlpatterns = [
-    # --- Authentication ---
+    # ==========================
+    # AUTHENTICATION
+    # ==========================
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', CustomLoginView.as_view(), name='login'),
-    
-    # --- NEW: Password Change ---
     path('auth/users/set_password/', ChangePasswordView.as_view(), name='change_password'),
-
-    # --- Resident Profile & Communities ---
     path('auth/users/me/', UserMeView.as_view(), name='user_profile'),
     path('communities/', CommunityListView.as_view(), name='community_list'),
 
-    # --- Emergency SOS ---
+    # ==========================
+    # RESIDENT ROUTES
+    # ==========================
+    # Dashboard
+    path('resident/dashboard-stats/', ResidentDashboardView.as_view(), name='dashboard_stats'),
+    
+    # Emergency SOS
     path('resident/sos/', EmergencySOSView.as_view(), name='emergency_sos'),
 
-    # --- Issue Reports ---
+    # Issue Reports
     path('resident/issues/', IssueReportView.as_view(), name='issue_reports'),
 
-    # --- Events ---
+    # Events
     path('resident/events/', EventListView.as_view(), name='event_list'),
     path('resident/events/participate/', EventParticipationView.as_view(), name='event_participate'),
     path('resident/events/request/', EventRequestView.as_view(), name='event_request'),
     path('resident/events/pending/', ResidentPendingEventsView.as_view(), name='resident_pending_events'),
 
-    # --- Services & Bookings ---
+    # Services & Bookings
     path('resident/services/', ServiceListView.as_view(), name='service_list'),
     path('resident/bookings/', BookingView.as_view(), name='booking_list'),
     path('resident/bookings/<int:pk>/', BookingDetailView.as_view(), name='booking_detail'),
-
-    path('resident/dashboard-stats/', ResidentDashboardView.as_view(), name='dashboard_stats'),
-
-    path('authority/departments/', DepartmentListView.as_view(), name='auth_dept_list'),
-
-    # -------------------------Bkash Payment Integration -------------------------
-    path('payment/bkash/initiate/', BkashInitiateView.as_view(), name='bkash_init'),
-    path('payment/bkash/callback/', BkashCallbackView.as_view(), name='bkash_callback'),
-    path('payment/bkash/query/', BkashQueryPaymentView.as_view(), name='bkash_query'),
 
     # Community Voting
     path('resident/community-issues/', CommunityIssueListView.as_view(), name='community_issues'),
@@ -100,20 +103,46 @@ urlpatterns = [
     path('resident/notifications/', NotificationView.as_view(), name='notifications'),
 
     # ==========================
+    # BKASH PAYMENT INTEGRATION
+    # ==========================
+    path('payment/bkash/initiate/', BkashInitiateView.as_view(), name='bkash_init'),
+    path('payment/bkash/callback/', BkashCallbackView.as_view(), name='bkash_callback'),
+    path('payment/bkash/query/', BkashQueryPaymentView.as_view(), name='bkash_query'),
+
+    # ==========================
     # AUTHORITY ROUTES
     # ==========================
     path('authority/dashboard-stats/', AuthorityDashboardStatsView.as_view(), name='auth_dashboard'),
+    path('authority/departments/', DepartmentListView.as_view(), name='auth_dept_list'),
+    
+    # Issues & Analytics
     path('issues/', AuthorityIssueListView.as_view(), name='auth_issue_list'),
     path('issues/<int:pk>/', AuthorityIssueDetailView.as_view(), name='auth_issue_detail'),
     path('analytics/summary/', AnalyticsSummaryView.as_view(), name='analytics_summary'),
+    path('authority/voting-results/', VotingResultsView.as_view(), name='voting_results'),
+
+    # SOS Management
     path('authority/sos/', AuthoritySOSView.as_view(), name='auth_sos_list'),
     path('authority/sos/<int:pk>/', AuthoritySOSDetailView.as_view(), name='auth_sos_update'),
     path('authority/sos/<int:pk>/dispatch/', AuthoritySOSDetailView.as_view(), name='auth_sos_dispatch'),
+
+    # Event Management
     path('authority/events/', AuthorityEventView.as_view(), name='auth_events'),
     path('authority/events/requests/', AuthorityEventRequestsView.as_view(), name='auth_event_requests'),
     path('authority/events/<int:pk>/action/', AuthorityEventActionView.as_view(), name='auth_event_action'),
     path('authority/events/<int:pk>/', AuthorityEventActionView.as_view(), name='auth_event_delete'),
-    path('authority/voting-results/', VotingResultsView.as_view(), name='voting_results'),
+
+    # ==========================
+    # SERVICE PROVIDER ROUTES
+    # ==========================
+    path('provider/dashboard/', ProviderDashboardStatsView.as_view(), name='provider_dashboard'),
+    path('provider/services/', ProviderServiceManageView.as_view(), name='provider_services'),
+    path('provider/services/<int:pk>/', ProviderServiceDetailView.as_view(), name='provider_service_detail'),
+    path('provider/bookings/', ProviderBookingManageView.as_view(), name='provider_bookings'),
+    path('provider/bookings/<int:pk>/update/', ProviderBookingStatusUpdateView.as_view(), name='provider_booking_update'),
+    path('provider/profile/', ProviderProfileView.as_view(), name='provider_profile'),
+    path('provider/reviews/', ProviderReviewsListView.as_view(), name='provider_reviews'),
+    
 
      # --- Hard-coded Admin profile & security ---
     path('admin/profile/', AdminProfileView.as_view(), name='admin_profile'),

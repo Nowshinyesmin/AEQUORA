@@ -18,7 +18,7 @@ import "./ViewUsers.css";
 function ViewUsers() {
   const navigate = useNavigate();
 
-  // 🔹 Dummy data – later replace with backend data
+  //  Dummy data – later replace with backend data
   const [users, setUsers] = useState([]);
 
 

@@ -14,7 +14,7 @@ import "./AddCommunity.css";
 
 function AddCommunity() {
   const navigate = useNavigate();
-   
+
   const [community, setCommunity] = useState({
     name: "",
     city: "",
@@ -106,8 +106,9 @@ function AddCommunity() {
           </p>
         </div>
 
-        <Row>
-          <Col md={8} lg={7}>
+        {/* Centered Community Details card */}
+        <Row className="justify-content-center">
+          <Col xs={12} md={10} lg={8}>
             <div className="form-card">
               <div className="form-card-header">
                 <div className="form-card-title-wrap">

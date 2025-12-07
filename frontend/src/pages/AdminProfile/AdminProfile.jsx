@@ -19,14 +19,13 @@ function AdminProfile() {
 
   // dummy local state – later you can fill from backend
   const [profile, setProfile] = useState({
-  firstName: "",
-  lastName: "",
-  email: "",
-  phone: "",
-  dob: "",
-  gender: "",
-});
-
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    dob: "",
+    gender: "",
+  });
 
   const [passwords, setPasswords] = useState({
     currentPassword: "",
@@ -133,9 +132,10 @@ function AdminProfile() {
           </p>
         </div>
 
+        {/* PROFILE SECTIONS */}
         <Row className="g-4">
-          {/* PERSONAL INFO */}
-          <Col md={7}>
+          {/* PERSONAL INFO – full width, on top */}
+          <Col xs={12}>
             <div className="profile-card">
               <div className="profile-card-header">
                 <div className="profile-card-title-wrap">
@@ -234,8 +234,8 @@ function AdminProfile() {
             </div>
           </Col>
 
-          {/* SECURITY / PASSWORD */}
-          <Col md={5}>
+          {/* SECURITY / PASSWORD – full width, below personal info */}
+          <Col xs={12}>
             <div className="profile-card">
               <div className="profile-card-header">
                 <div className="profile-card-title-wrap">

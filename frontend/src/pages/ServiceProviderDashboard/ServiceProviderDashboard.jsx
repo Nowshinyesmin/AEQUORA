@@ -1,5 +1,3 @@
-// frontend/src/pages/ServiceProviderDashboard/ServiceProviderDashboard.jsx
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -12,17 +10,18 @@ import {
     DollarSign, 
     CheckCircle, 
     Clock, 
-    AlertCircle 
+    AlertCircle,
+    XCircle,
+    Check
 } from 'lucide-react';
 import { Container, Row, Col, Table, Badge, Spinner, Button } from 'react-bootstrap';
 import './ServiceProviderDashboard.css';
 import { api } from "../../api/client"; 
 
-// --- Internal Sidebar Component ---
+// --- Internal Sidebar Component (Your Custom Design) ---
 const Sidebar = ({ userInfo, handleLogout }) => {
     const location = useLocation();
     
-    // Using the paths defined in main.jsx
     const navLinks = [
         { to: '/serviceprovider/dashboard', icon: Grid, label: 'Dashboard' },
         { to: '/serviceprovider/bookings', icon: Calendar, label: 'Manage Bookings' },
@@ -43,11 +42,13 @@ const Sidebar = ({ userInfo, handleLogout }) => {
                 <div className="profile-avatar-sp">
                     <User size={32} />
                 </div>
-                <div className="user-name">{userInfo?.firstname || 'Provider'} {userInfo?.lastname || ''}</div>
+                <div className="user-name">
+                    {userInfo?.first_name || 'Service'} {userInfo?.last_name || 'Provider'}
+                </div>
                 <div className="user-role">Service Partner</div>
             </div>
 
-            {/* Middle: Navigation (Scrollable & Flexible) */}
+            {/* Middle: Navigation */}
             <nav className="nav-links">
                 {navLinks.map((link) => (
                     <Link 
@@ -61,7 +62,7 @@ const Sidebar = ({ userInfo, handleLogout }) => {
                 ))}
             </nav>
 
-            {/* Bottom: Footer with Logout (Pinned) */}
+            {/* Bottom: Footer with Logout */}
             <div className="sidebar-footer">
                 <button onClick={handleLogout} className="logout-btn">
                     <LogOut size={20} style={{ marginRight: '8px' }} />
@@ -76,43 +77,46 @@ const Sidebar = ({ userInfo, handleLogout }) => {
 function ServiceProviderDashboard() {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(true);
-    const [userInfo, setUserInfo] = useState({ firstname: '', lastname: '' });
+    const [userInfo, setUserInfo] = useState({ first_name: '', last_name: '' });
     
     // State to hold dashboard data from API
     const [dashboardData, setDashboardData] = useState({
         totalEarnings: 0,
-        activeBookingsCount: 0,
+        totalBookingsCount: 0,
         completedServicesCount: 0,
         averageRating: 0.0,
         recentBookings: [] 
     });
 
     // --- API Data Fetching ---
+    const fetchDashboardData = async () => {
+        try {
+            // 1. Fetch User Info
+            const profileRes = await api.get('/provider/profile/');
+            setUserInfo({
+                first_name: profileRes.data.first_name,
+                last_name: profileRes.data.last_name
+            });
+
+            // 2. Fetch Stats & Recent Bookings
+            const dashRes = await api.get('/provider/dashboard/');
+            
+            setDashboardData({
+                totalEarnings: dashRes.data.earnings || 0,
+                totalBookingsCount: dashRes.data.total_bookings || 0,
+                completedServicesCount: dashRes.data.completed_bookings || 0,
+                averageRating: dashRes.data.rating || 0,
+                recentBookings: dashRes.data.recent_bookings || []
+            });
+
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching dashboard data:", error);
+            setLoading(false); 
+        }
+    };
+
     useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                // 1. Fetch User Info
-                const userRes = await api.get('/auth/users/me/'); 
-                setUserInfo(userRes.data);
-
-                // 2. Fetch Stats & Recent Bookings
-                const dashRes = await api.get('/service-provider/dashboard-summary/');
-                
-                setDashboardData({
-                    totalEarnings: dashRes.data.total_earnings,
-                    activeBookingsCount: dashRes.data.active_bookings,
-                    completedServicesCount: dashRes.data.completed_jobs,
-                    averageRating: dashRes.data.rating,
-                    recentBookings: dashRes.data.recent_bookings
-                });
-
-                setLoading(false);
-            } catch (error) {
-                console.error("Error fetching dashboard data:", error);
-                setLoading(false); 
-            }
-        };
-
         fetchDashboardData();
     }, []);
 
@@ -122,12 +126,24 @@ function ServiceProviderDashboard() {
         navigate('/login');
     };
 
+    // --- Action Handlers (Accept/Decline) ---
+    const handleStatusUpdate = async (bookingId, newStatus) => {
+        try {
+            await api.put(`/provider/bookings/${bookingId}/update/`, { status: newStatus });
+            // Refresh data to show updated status
+            fetchDashboardData();
+        } catch (error) {
+            console.error("Error updating status:", error);
+            alert("Failed to update status.");
+        }
+    };
+
     const getStatusBadge = (status) => {
         switch (status?.toLowerCase()) {
             case 'pending':
                 return <span className="status-badge pending"><Clock size={12} /> Pending</span>;
-            case 'confirmed':
-                return <span className="status-badge confirmed"><CheckCircle size={12} /> Confirmed</span>;
+            case 'accepted':
+                return <span className="status-badge confirmed"><CheckCircle size={12} /> Accepted</span>;
             case 'completed':
                 return <span className="status-badge completed"><CheckCircle size={12} /> Completed</span>;
             case 'cancelled':
@@ -155,7 +171,7 @@ function ServiceProviderDashboard() {
                 <Container fluid>
                     {/* Header */}
                     <div className="header-welcome">
-                        <h1>Welcome back, {userInfo.firstname || 'Partner'}!</h1>
+                        <h1>Welcome back, {userInfo.first_name || 'Partner'}!</h1>
                         <p>Here is what’s happening with your services today.</p>
                     </div>
 
@@ -174,12 +190,12 @@ function ServiceProviderDashboard() {
                             </div>
                         </Col>
 
-                        {/* Active Bookings Card */}
+                        {/* Total Bookings Card */}
                         <Col md={6} xl={3}>
                             <div className="stat-card">
                                 <div className="stat-info">
-                                    <span className="stat-title">Active Bookings</span>
-                                    <span className="stat-value">{dashboardData.activeBookingsCount}</span>
+                                    <span className="stat-title">Total Bookings</span>
+                                    <span className="stat-value">{dashboardData.totalBookingsCount}</span>
                                 </div>
                                 <div className="stat-icon-wrapper bg-blue-light">
                                     <Calendar size={24} />
@@ -205,7 +221,9 @@ function ServiceProviderDashboard() {
                             <div className="stat-card">
                                 <div className="stat-info">
                                     <span className="stat-title">My Rating</span>
-                                    <span className="stat-value">{dashboardData.averageRating} <span style={{fontSize: '1rem', color:'#fbbf24'}}>★</span></span>
+                                    <span className="stat-value">
+                                        {dashboardData.averageRating} <span style={{fontSize: '1rem', color:'#fbbf24'}}>★</span>
+                                    </span>
                                 </div>
                                 <div className="stat-icon-wrapper bg-yellow-light">
                                     <Star size={24} />
@@ -232,23 +250,55 @@ function ServiceProviderDashboard() {
                                     <th>Date Scheduled</th>
                                     <th>Amount</th>
                                     <th>Status</th>
+                                    <th className="text-end">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {dashboardData.recentBookings && dashboardData.recentBookings.length > 0 ? (
                                     dashboardData.recentBookings.map((booking) => (
-                                        <tr key={booking.id}>
-                                            <td>#{booking.id}</td>
-                                            <td className="fw-bold">{booking.client_name}</td>
+                                        <tr key={booking.bookingid}>
+                                            <td>#{booking.bookingid}</td>
+                                            <td className="fw-bold">
+                                                {booking.resident_name} {booking.resident_lastname}
+                                            </td>
                                             <td>{booking.service_name}</td>
-                                            <td>{new Date(booking.scheduled_date).toLocaleDateString()}</td>
+                                            <td>{new Date(booking.bookingdate).toLocaleDateString()}</td>
                                             <td>${booking.price}</td>
                                             <td>{getStatusBadge(booking.status)}</td>
+                                            <td className="text-end">
+                                                {booking.status === 'Pending' && (
+                                                    <div className="d-flex justify-content-end gap-2">
+                                                        <Button 
+                                                            variant="success" 
+                                                            size="sm" 
+                                                            className="p-1 rounded-circle d-flex align-items-center justify-content-center"
+                                                            style={{width: '32px', height: '32px'}}
+                                                            onClick={() => handleStatusUpdate(booking.bookingid, 'Accepted')}
+                                                            title="Accept Booking"
+                                                        >
+                                                            <Check size={16} />
+                                                        </Button>
+                                                        <Button 
+                                                            variant="danger" 
+                                                            size="sm"
+                                                            className="p-1 rounded-circle d-flex align-items-center justify-content-center"
+                                                            style={{width: '32px', height: '32px'}}
+                                                            onClick={() => handleStatusUpdate(booking.bookingid, 'Cancelled')}
+                                                            title="Decline Booking"
+                                                        >
+                                                            <XCircle size={16} />
+                                                        </Button>
+                                                    </div>
+                                                )}
+                                                {booking.status !== 'Pending' && (
+                                                    <span className="text-muted small">No actions</span>
+                                                )}
+                                            </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="6" className="text-center py-4 text-muted">
+                                        <td colSpan="7" className="text-center py-4 text-muted">
                                             No recent bookings found.
                                         </td>
                                     </tr>

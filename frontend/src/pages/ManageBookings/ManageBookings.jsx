@@ -1,22 +1,17 @@
-// frontend/src/pages/ManageBookings/ManageBookings.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import { 
     Grid, Calendar, Star, Briefcase, User, 
-    LogOut, CheckCircle, XCircle, Clock, AlertCircle 
+    LogOut, Save, RefreshCw 
 } from 'lucide-react';
-import { Container, Table, Button, Badge, Spinner } from 'react-bootstrap';
-// This import assumes you have the client.js file in src/api/client.js
+import { Container, Table, Spinner, Form, Button } from 'react-bootstrap';
 import { api } from "../../api/client"; 
 import './ManageBookings.css';
 
-// --- Internal Sidebar Component ---
-// Replicated exactly from ServiceProviderDashboard.jsx to ensure visual consistency
+// --- SIDEBAR (Safe Logout Version) ---
 const Sidebar = ({ handleLogout }) => {
     const location = useLocation();
     
-    // Navigation links matching the main.jsx routes
     const navLinks = [
         { to: '/serviceprovider/dashboard', icon: Grid, label: 'Dashboard' },
         { to: '/serviceprovider/bookings', icon: Calendar, label: 'Manage Bookings' },
@@ -27,265 +22,229 @@ const Sidebar = ({ handleLogout }) => {
 
     const isActive = (path) => location.pathname === path;
 
+    const performLogout = () => {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        if (handleLogout) {
+            handleLogout();
+        } else {
+            window.location.href = '/login'; 
+        }
+    };
+
     return (
         <aside className="dashboard-sidebar">
-            <div className="sidebar-brand">
-                Aequora
-            </div>
+            <div className="sidebar-brand">Aequora</div>
             <nav className="sidebar-nav">
-                {navLinks.map((link) => {
-                    const Icon = link.icon;
-                    return (
-                        <Link
-                            key={link.to}
-                            to={link.to}
-                            className={`nav-item ${isActive(link.to) ? 'active' : ''}`}
-                        >
-                            <Icon size={20} />
-                            <span>{link.label}</span>
-                        </Link>
-                    );
-                })}
+                {navLinks.map((link) => (
+                    <Link 
+                        key={link.to} 
+                        to={link.to} 
+                        className={`nav-item ${isActive(link.to) ? 'active' : ''}`}
+                    >
+                        <link.icon size={20} />
+                        <span>{link.label}</span>
+                    </Link>
+                ))}
             </nav>
             <div className="sidebar-footer">
-                <button onClick={handleLogout} className="logout-button">
-                    <LogOut size={18} />
-                    <span>Log Out</span>
+                <button onClick={performLogout} className="logout-btn">
+                    <LogOut size={20} />
+                    <span>Logout</span>
                 </button>
             </div>
         </aside>
     );
 };
 
-const ManageBookings = () => {
+// --- MANAGE BOOKINGS ---
+const ManageBookings = ({ handleLogout }) => {
     const [bookings, setBookings] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [filterStatus, setFilterStatus] = useState('All');
-    
-    const navigate = useNavigate();
+    const [updating, setUpdating] = useState(null); // Track which ID is updating
 
-    // 1. Fetch Bookings from API
+    const fetchBookings = async () => {
+        try {
+            const response = await api.get('/provider/bookings/');
+            const mapped = response.data.map(b => ({
+                id: b.bookingid,
+                client_name: b.resident_name || 'Resident',
+                service: b.service_name,
+                scheduled_date: b.bookingdate,
+                status: b.status,
+                payment_status: b.paymentstatus, 
+                address: b.resident_address
+            }));
+            setBookings(mapped);
+            setLoading(false);
+        } catch (error) {
+            console.error("Error fetching bookings", error);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        const fetchBookings = async () => {
-            try {
-                // Expected response: List of booking objects matching your Django Serializer
-                // Ensure your view returns fields: id, client_name, service_name, scheduled_date, price, status
-                const response = await api.get("/service-provider/bookings/");
-                setBookings(response.data);
-                setLoading(false);
-            } catch (err) {
-                console.error("Error fetching bookings:", err);
-                setError("Failed to load bookings. Please check your connection.");
-                setLoading(false);
-            }
-        };
-
         fetchBookings();
     }, []);
 
-    // 2. Handle Logout
-    const handleLogout = () => {
-        localStorage.removeItem('token');
-        navigate('/login');
+    // 1. Handle Local Dropdown Change
+    const handleLocalChange = (id, field, value) => {
+        setBookings(prev => prev.map(b => 
+            b.id === id ? { ...b, [field]: value } : b
+        ));
     };
 
-    // 3. Handle Status Updates (Accept, Reject, Complete)
-    const handleStatusUpdate = async (bookingId, newStatus) => {
+    // 2. Handle Save to API
+    const handleSave = async (id, type) => {
+        const booking = bookings.find(b => b.id === id);
+        if (!booking) return;
+
+        setUpdating(id); // Show loading state for this row
+
         try {
-            // Optimistic UI Update
-            setBookings(prevBookings => prevBookings.map(b => 
-                b.id === bookingId ? { ...b, status: newStatus } : b
-            ));
-
-            // API Call to update status in backend
-            await api.patch(`/service-provider/bookings/${bookingId}/update-status/`, {
-                status: newStatus
-            });
+            let payload = {};
             
-        } catch (err) {
-            console.error("Error updating status:", err);
-            alert("Failed to update status. Please try again.");
-            // Revert the optimistic update if necessary
+            if (type === 'booking_status') {
+                payload = { status: booking.status };
+            } else if (type === 'payment_status') {
+                // Ensure we send 'paymentstatus' (lowercase) to match the Backend View fix
+                payload = { paymentstatus: booking.payment_status }; 
+            }
+
+            const response = await api.put(`/provider/bookings/${id}/update/`, payload);
+            
+            // Verify response data confirms the change
+            if (response.status === 200) {
+                 // Success logic
+                 alert("Update Saved Successfully!");
+            }
+            
+        } catch (error) {
+            console.error("Update failed:", error);
+            alert("Failed to save. Please check your connection.");
+            fetchBookings(); // Revert changes on error
+        } finally {
+            setUpdating(null);
         }
     };
 
-    // 4. Filtering Logic
-    const filteredBookings = bookings.filter(booking => {
-        if (filterStatus === 'All') return true;
-        return booking.status === filterStatus;
-    });
+    const filteredBookings = filterStatus === 'All' 
+        ? bookings 
+        : bookings.filter(b => b.status === filterStatus);
 
-    // 5. Status Badge Helper
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Pending': 
-                return <Badge bg="warning" text="dark">Pending</Badge>;
-            case 'Confirmed': 
-                return <Badge bg="primary">Confirmed</Badge>;
-            case 'Completed': 
-                return <Badge bg="success">Completed</Badge>;
-            case 'Cancelled': 
-                return <Badge bg="danger">Cancelled</Badge>;
-            default: 
-                return <Badge bg="secondary">{status}</Badge>;
-        }
-    };
-
-    if (loading) {
-        return (
-            <div className="dashboard-root">
-                <Sidebar handleLogout={handleLogout} />
-                <main className="main-content d-flex justify-content-center align-items-center">
-                    <Spinner animation="border" variant="primary" />
-                </main>
-            </div>
-        );
-    }
+    if (loading) return (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+            <Spinner animation="border" />
+        </div>
+    );
 
     return (
-        <div className="dashboard-root">
+        <div className="dashboard-layout">
             <Sidebar handleLogout={handleLogout} />
-
-            <main className="main-content">
-                <Container fluid>
-                    {/* Header */}
-                    <div className="page-header">
-                        <h1 className="page-title">Manage Bookings</h1>
-                        <p className="page-subtitle">Track and update your incoming service requests.</p>
-                    </div>
-
-                    {/* Filter Tabs */}
-                    <div className="filter-container">
-                        {['All', 'Pending', 'Confirmed', 'Completed', 'Cancelled'].map((status) => (
-                            <button
-                                key={status}
-                                className={`filter-tab ${filterStatus === status ? 'active' : ''}`}
-                                onClick={() => setFilterStatus(status)}
-                            >
-                                {status}
-                            </button>
-                        ))}
-                    </div>
-
-                    {/* Error Display */}
-                    {error && (
-                        <div className="alert alert-danger d-flex align-items-center mb-4">
-                            <AlertCircle size={18} className="me-2" />
-                            {error}
+            <main className="dashboard-main">
+                <Container fluid className="p-4">
+                    <div className="d-flex justify-content-between align-items-center mb-4">
+                        <div className="d-flex align-items-center gap-3">
+                            <h2 className="mb-0">Manage Bookings</h2>
+                            <Button variant="light" size="sm" onClick={fetchBookings} title="Refresh Data">
+                                <RefreshCw size={16} />
+                            </Button>
                         </div>
-                    )}
+                        <div className="btn-group">
+                            {['All', 'Pending', 'Accepted', 'Completed'].map(status => (
+                                <button 
+                                    key={status}
+                                    className={`btn ${filterStatus === status ? 'btn-primary' : 'btn-outline-primary'}`}
+                                    onClick={() => setFilterStatus(status)}
+                                >
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
 
-                    {/* Bookings Table Card - Matches ServiceProviderDashboard CSS */}
-                    <div className="table-card">
-                        <Table responsive hover className="custom-table">
-                            <thead>
+                    <div className="table-responsive bg-white rounded shadow-sm">
+                        <Table hover className="align-middle mb-0">
+                            <thead className="bg-light">
                                 <tr>
-                                    <th>ID</th>
-                                    <th>Client Name</th>
-                                    <th>Service</th>
-                                    <th>Date & Time</th>
-                                    <th>Price</th>
-                                    <th>Status</th>
-                                    <th className="text-end">Actions</th>
+                                    <th style={{width: '5%'}}>ID</th>
+                                    <th style={{width: '15%'}}>Client</th>
+                                    <th style={{width: '20%'}}>Service</th>
+                                    <th style={{width: '10%'}}>Date</th>
+                                    <th style={{width: '25%'}}>Booking Status</th>
+                                    <th style={{width: '25%'}}>Payment Status</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {filteredBookings.length > 0 ? (
                                     filteredBookings.map((booking) => (
                                         <tr key={booking.id}>
-                                            <td className="text-muted">#{booking.id}</td>
+                                            <td>#{booking.id}</td>
+                                            <td className="fw-bold">{booking.client_name}</td>
+                                            <td>
+                                                <div>{booking.service}</div>
+                                                <small className="text-muted">{booking.address}</small>
+                                            </td>
+                                            <td>{new Date(booking.scheduled_date).toLocaleDateString()}</td>
                                             
-                                            <td className="fw-bold">
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <div className="bg-light rounded-circle p-1">
-                                                        <User size={14} className="text-secondary" />
-                                                    </div>
-                                                    {booking.client_name}
+                                            {/* Booking Status + Save */}
+                                            <td>
+                                                <div className="d-flex gap-2">
+                                                    <Form.Select 
+                                                        size="sm"
+                                                        value={booking.status}
+                                                        onChange={(e) => handleLocalChange(booking.id, 'status', e.target.value)}
+                                                        className={`status-select border-${
+                                                            booking.status === 'Completed' ? 'success' : 
+                                                            booking.status === 'Cancelled' ? 'danger' : 'primary'
+                                                        }`}
+                                                    >
+                                                        <option value="Pending">Pending</option>
+                                                        <option value="Accepted">Accepted</option>
+                                                        <option value="Completed">Completed</option>
+                                                        <option value="Cancelled">Cancelled</option>
+                                                    </Form.Select>
+                                                    <Button 
+                                                        variant="outline-success" 
+                                                        size="sm"
+                                                        onClick={() => handleSave(booking.id, 'booking_status')}
+                                                        disabled={updating === booking.id}
+                                                    >
+                                                        <Save size={16} />
+                                                    </Button>
                                                 </div>
                                             </td>
-                                            
-                                            <td>
-                                                <div className="d-flex align-items-center gap-2">
-                                                    <Briefcase size={14} className="text-primary" />
-                                                    {booking.service_name}
-                                                </div>
-                                            </td>
-                                            
-                                            <td>
-                                                <div className="d-flex flex-column">
-                                                    <span className="fw-medium">
-                                                        {new Date(booking.scheduled_date).toLocaleDateString()}
-                                                    </span>
-                                                    <small className="text-muted d-flex align-items-center gap-1">
-                                                        <Clock size={10} />
-                                                        {new Date(booking.scheduled_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                    </small>
-                                                </div>
-                                            </td>
-                                            
-                                            <td className="fw-bold text-dark">
-                                                ${booking.price}
-                                            </td>
-                                            
-                                            <td>{getStatusBadge(booking.status)}</td>
-                                            
-                                            <td>
-                                                <div className="btn-action-group">
-                                                    {/* Actions for Pending Bookings */}
-                                                    {booking.status === 'Pending' && (
-                                                        <>
-                                                            <Button 
-                                                                variant="success" 
-                                                                size="sm" 
-                                                                className="btn-action"
-                                                                onClick={() => handleStatusUpdate(booking.id, 'Confirmed')}
-                                                            >
-                                                                <CheckCircle size={14} /> Accept
-                                                            </Button>
-                                                            <Button 
-                                                                variant="outline-danger" 
-                                                                size="sm" 
-                                                                className="btn-action"
-                                                                onClick={() => handleStatusUpdate(booking.id, 'Cancelled')}
-                                                            >
-                                                                <XCircle size={14} /> Reject
-                                                            </Button>
-                                                        </>
-                                                    )}
 
-                                                    {/* Actions for Confirmed Bookings */}
-                                                    {booking.status === 'Confirmed' && (
-                                                        <Button 
-                                                            variant="primary" 
-                                                            size="sm" 
-                                                            className="btn-action"
-                                                            onClick={() => handleStatusUpdate(booking.id, 'Completed')}
-                                                        >
-                                                            <CheckCircle size={14} /> Mark Complete
-                                                        </Button>
-                                                    )}
-
-                                                    {/* No Actions for Completed/Cancelled */}
-                                                    {(booking.status === 'Completed' || booking.status === 'Cancelled') && (
-                                                        <span className="text-muted small">No actions available</span>
-                                                    )}
+                                            {/* Payment Status + Save */}
+                                            <td>
+                                                <div className="d-flex gap-2">
+                                                    <Form.Select 
+                                                        size="sm"
+                                                        value={booking.payment_status || 'Unpaid'}
+                                                        onChange={(e) => handleLocalChange(booking.id, 'payment_status', e.target.value)}
+                                                    >
+                                                        <option value="Unpaid">Unpaid</option>
+                                                        <option value="Paid">Paid</option>
+                                                        {/* Removed "Refunding" to prevent database errors (limit 8 chars) */}
+                                                        <option value="Refunded">Refunded</option>
+                                                    </Form.Select>
+                                                    <Button 
+                                                        variant="outline-success" 
+                                                        size="sm"
+                                                        onClick={() => handleSave(booking.id, 'payment_status')}
+                                                        disabled={updating === booking.id}
+                                                    >
+                                                        <Save size={16} />
+                                                    </Button>
                                                 </div>
                                             </td>
                                         </tr>
                                     ))
                                 ) : (
                                     <tr>
-                                        <td colSpan="7">
-                                            <div className="empty-state">
-                                                <Calendar size={48} className="mb-3 opacity-50" />
-                                                <h5>No bookings found</h5>
-                                                <p className="mb-0">
-                                                    {filterStatus === 'All' 
-                                                        ? "You don't have any service requests yet." 
-                                                        : `No bookings found with status "${filterStatus}".`}
-                                                </p>
-                                            </div>
+                                        <td colSpan="6" className="text-center py-5 text-muted">
+                                            No bookings found.
                                         </td>
                                     </tr>
                                 )}

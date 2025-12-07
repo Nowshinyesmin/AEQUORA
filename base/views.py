@@ -27,10 +27,16 @@ from .serializers import (
     ServiceSerializer, BookingSerializer, CommunitySerializer,
     CommunityIssueSerializer, NotificationSerializer, EventRequestSerializer,
     AuthorityIssueSerializer, AuthorityEventSerializer, AuthoritySOSSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    # --- Service Provider Serializers ---
+    ProviderServiceSerializer, ProviderBookingSerializer,
+    ProviderProfileSerializer, ProviderReviewSerializer
 )
 
-# ... [Authentication Views: CustomLoginView, RegisterView, ChangePasswordView remain same] ...
+# ==========================================
+#  AUTHENTICATION & CORE VIEWS
+# ==========================================
+
 class CustomLoginView(APIView):
     permission_classes = [permissions.AllowAny]
     def post(self, request):
@@ -127,7 +133,10 @@ class ChangePasswordView(APIView):
             return Response({"message": "Password updated successfully"}, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# ... [Resident Feature Views: Dashboard, Profile, SOS, Issue, Event, Service] ...
+# ==========================================
+#  RESIDENT FEATURE VIEWS
+# ==========================================
+
 class ResidentDashboardView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -237,19 +246,47 @@ class IssueReportView(generics.ListCreateAPIView):
         except Resident.DoesNotExist:
             raise serializers.ValidationError("User is not a resident.")
 
-class EventListView(generics.ListAPIView):
-    serializer_class = EventSerializer
+# In base/views.py
+
+class EventListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
-    def get_queryset(self):
+
+    def get(self, request):
+        user = request.user
+        
+        # 1. Resolve User Object
+        if hasattr(user, 'email'): 
+            email_str = user.email
+        else: 
+            email_str = str(user)
+            
         try:
-            user_email = UserEmail.objects.get(email=self.request.user.email)
-            app_user = user_email.userid
-            community = app_user.communityid
-            if community:
-                return Event.objects.filter(communityid=community, status='Published').order_by('-date')
-            return Event.objects.none()
-        except Exception:
-            return Event.objects.none()
+            email_obj = UserEmail.objects.get(email=email_str)
+            user_obj = email_obj.userid
+        except UserEmail.DoesNotExist:
+            return Response({'error': 'User not found'}, status=404)
+
+        # 2. Check if User is a Resident and get Community
+        community_id = None
+        try:
+            resident = Resident.objects.get(userid=user_obj)
+            # CHECK: Ensure we are accessing the ID correctly
+            if resident.userid.communityid:
+                community_id = resident.userid.communityid.communityid
+        except Resident.DoesNotExist:
+            pass
+
+        # 3. Filter Events
+        if community_id:
+            # Show events for this community
+            events = Event.objects.filter(communityid=community_id).order_by('-date')
+        else:
+            # FALLBACK: If user has no community, show ALL events (for testing)
+            # Remove this 'else' block later if you want strict privacy
+            events = Event.objects.all().order_by('-date')
+
+        serializer = EventSerializer(events, many=True)
+        return Response(serializer.data)
 
 class ResidentPendingEventsView(generics.ListAPIView):
     serializer_class = EventSerializer
@@ -386,7 +423,10 @@ class BookingDetailView(generics.DestroyAPIView):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-# ... [Authority Views, NotificationView, etc. remain unchanged] ...
+# ==========================================
+#  AUTHORITY & SHARED VIEWS
+# ==========================================
+
 class AuthorityDashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     def get(self, request):
@@ -602,7 +642,252 @@ class EventRequestView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-# --- BKASH CONFIGURATION ---
+# ==========================================
+#  SERVICE PROVIDER VIEWS
+# ==========================================
+
+def get_provider_safely(request_user):
+    """
+    Safely retrieves the ServiceProvider based on your specific DB Schema:
+    UserEmail -> User -> ServiceProvider
+    """
+    email_str = str(request_user)
+    if hasattr(request_user, 'email'):
+        email_str = request_user.email
+    
+    # 1. Find User via UserEmail table
+    try:
+        email_record = UserEmail.objects.get(email=email_str)
+        user_instance = email_record.userid
+    except (UserEmail.DoesNotExist, AttributeError):
+        return None
+
+    # 2. Get ServiceProvider profile
+    try:
+        return Serviceprovider.objects.get(userid=user_instance)
+    except Serviceprovider.DoesNotExist:
+        return None
+
+class ProviderDashboardStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Profile not found'}, status=404)
+
+        bookings = Booking.objects.filter(providerid=provider)
+        total_bookings = bookings.count()
+        completed_bookings = bookings.filter(status__iexact='Completed').count()
+        earnings = sum(b.price for b in bookings.filter(status__iexact='Completed') if b.price)
+        
+        # Calculate Rating dynamically
+        avg_rating = Review.objects.filter(providerid=provider).aggregate(Avg('rating'))['rating__avg'] or 0
+        
+        recent_bookings = ProviderBookingSerializer(bookings.order_by('-bookingdate')[:5], many=True).data
+
+        return Response({
+            'total_bookings': total_bookings,
+            'completed_bookings': completed_bookings,
+            'earnings': earnings,
+            'rating': round(avg_rating, 1),
+            'recent_bookings': recent_bookings
+        })
+
+class ProviderServiceManageView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        services = Service.objects.filter(providerid=provider)
+        serializer = ProviderServiceSerializer(services, many=True)
+        return Response(serializer.data)
+
+    def post(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        # FIX: Fetch the Community ID from the User's profile
+        user_community = provider.userid.communityid
+        
+        if not user_community:
+             return Response({'error': 'Your profile is not linked to a Community. Please update your profile settings first.'}, status=400)
+
+        serializer = ProviderServiceSerializer(data=request.data)
+        if serializer.is_valid():
+            # FIX: Save with BOTH providerid AND communityid
+            serializer.save(providerid=provider, communityid=user_community) 
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ProviderServiceDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def put(self, request, pk):
+        """ Update an existing service """
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        try:
+            service = Service.objects.get(serviceid=pk, providerid=provider)
+        except Service.DoesNotExist:
+            return Response({'error': 'Service not found'}, status=404)
+
+        # FIX: Add partial=True to allow updating just price/slots without crashing on missing fields
+        serializer = ProviderServiceSerializer(service, data=request.data, partial=True)
+        
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        
+        # This prints the REAL error to your terminal so we know exactly what's wrong if it fails again
+        print("Update Validation Errors:", serializer.errors) 
+        return Response(serializer.errors, status=400)
+
+    def delete(self, request, pk):
+        """ Delete a service """
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        try:
+            service = Service.objects.get(serviceid=pk, providerid=provider)
+            service.delete()
+            return Response({'message': 'Service deleted successfully'}, status=204)
+        except Service.DoesNotExist:
+            return Response({'error': 'Service not found or access denied'}, status=404)
+
+class ProviderBookingManageView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        bookings = Booking.objects.filter(providerid=provider).order_by('-bookingdate')
+        serializer = ProviderBookingSerializer(bookings, many=True)
+        return Response(serializer.data)
+
+# base/views.py
+
+class ProviderBookingStatusUpdateView(generics.UpdateAPIView):
+    serializer_class = ProviderBookingSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    
+    def get_queryset(self):
+        # CRITICAL FIX: request.user is an email string, NOT a User object.
+        # We must resolve Email -> User object via UserEmail table as per your database truths.
+        email_str = self.request.user
+        
+        try:
+            # 1. Find the UserEmail entry matching the logged-in email
+            user_email_obj = UserEmail.objects.get(email=email_str)
+            # 2. Extract the actual User object (userid is the ForeignKey)
+            user_obj = user_email_obj.userid
+        except UserEmail.DoesNotExist:
+            # If email doesn't exist in UserEmail, return empty
+            return Booking.objects.none()
+
+        # 3. Use the resolved User object to filter bookings
+        # Booking -> providerid (ServiceProvider) -> userid (User)
+        return Booking.objects.filter(providerid__userid=user_obj)
+
+    def update(self, request, *args, **kwargs):
+        instance = self.get_object()
+        
+        # 1. Update Booking Status if present
+        if 'status' in request.data:
+            instance.status = request.data['status']
+            
+        # 2. Update Payment Status if present (Explicitly handling 'paymentstatus')
+        if 'paymentstatus' in request.data:
+            instance.paymentstatus = request.data['paymentstatus']
+            
+        instance.save()
+        
+        # Return updated data
+        serializer = self.get_serializer(instance)
+        return Response(serializer.data)
+
+class ProviderProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = (MultiPartParser, FormParser) # REQUIRED for File Uploads
+
+    def get(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+        serializer = ProviderProfileSerializer(provider)
+        return Response(serializer.data)
+
+    def put(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        user = provider.userid # Get the linked User instance
+
+        # 1. Update User Table Fields
+        user.firstname = request.data.get('first_name', user.firstname)
+        user.lastname = request.data.get('last_name', user.lastname)
+        user.gender = request.data.get('gender', user.gender)
+        
+        dob = request.data.get('date_of_birth')
+        if dob and dob != 'null': user.date_of_birth = dob
+
+        # Update Community ID
+        comm_id = request.data.get('community_id')
+        if comm_id:
+            try:
+                user.communityid = Community.objects.get(communityid=comm_id)
+            except Community.DoesNotExist:
+                pass # Ignore invalid community IDs
+        
+        user.save()
+
+        # 2. Update Phone Number Table
+        phone = request.data.get('phone_number')
+        if phone:
+            UserPhonenumber.objects.update_or_create(userid=user, defaults={'phonenumber': phone})
+
+        # 3. Update ServiceProvider Table Fields
+        provider.subrole = request.data.get('subrole', provider.subrole)
+        provider.service_area = request.data.get('service_area', provider.service_area)
+        provider.workinghours = request.data.get('workinghours', provider.workinghours)
+        provider.availability_status = request.data.get('availability_status', provider.availability_status)
+
+        # 4. Handle File Upload
+        if 'certificationfile' in request.FILES:
+            provider.certificationfile = request.FILES['certificationfile']
+
+        provider.save()
+        
+        return Response(ProviderProfileSerializer(provider).data)
+
+class ProviderReviewsListView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        provider = get_provider_safely(request.user)
+        if not provider:
+            return Response({'error': 'Provider not found'}, status=404)
+
+        # Get reviews for this provider, newest first
+        reviews = Review.objects.filter(providerid=provider).order_by('-createdat')
+        serializer = ProviderReviewSerializer(reviews, many=True)
+        return Response(serializer.data)
+
+# ==========================================
+#  BKASH PAYMENT CONFIGURATION & VIEWS
+# ==========================================
+
 BKASH_BASE_URL = "https://checkout.sandbox.bka.sh/v1.2.0-beta/checkout"
 BKASH_USERNAME = "YOUR_SANDBOX_USERNAME"      
 BKASH_PASSWORD = "YOUR_SANDBOX_PASSWORD"      

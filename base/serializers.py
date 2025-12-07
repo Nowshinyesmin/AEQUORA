@@ -1,9 +1,10 @@
 from rest_framework import serializers
+from django.db.models import Avg
 from .models import (
     User, Resident, UserEmail, UserPhonenumber,
     Emergencyreport, Issuereport, Event, Service, Booking,  
     Community, Example, Eventparticipation, Issuevote, Issueassignment,
-    Review, Authority, Notification
+    Review, Authority, Notification, Serviceprovider, Payment, Review
 )
 
 class CommunitySerializer(serializers.ModelSerializer):
@@ -97,11 +98,14 @@ class IssueReportSerializer(serializers.ModelSerializer):
         model = Issuereport
         fields = ['issueid', 'title', 'type', 'description', 'mapaddress', 'prioritylevel', 'status', 'createdat']
 
+# --- Find EventSerializer and REPLACE it with this: ---
 class EventSerializer(serializers.ModelSerializer):
     posted_by_name = serializers.SerializerMethodField()
     class Meta:
         model = Event
-        fields = ['eventid', 'title', 'description', 'date', 'time', 'location', 'category', 'posted_by_name']
+        # Added communityid, status, createdat so frontend can filter/sort
+        fields = ['eventid', 'communityid', 'title', 'description', 'date', 'time', 'location', 'category', 'status', 'createdat', 'posted_by_name']
+    
     def get_posted_by_name(self, obj):
         if obj.postedbyid: return f"{obj.postedbyid.firstname} {obj.postedbyid.lastname}"
         return "Unknown"
@@ -199,3 +203,100 @@ class EventRequestSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+# ==========================================
+#  SERVICE PROVIDER SERIALIZERS
+# ==========================================
+
+class ProviderServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ['serviceid', 'servicename', 'description', 'price', 'availability']
+
+# --- Find ProviderBookingSerializer and REPLACE it with this: ---
+class ProviderBookingSerializer(serializers.ModelSerializer):
+    resident_name = serializers.CharField(source='residentid.userid.firstname', read_only=True)
+    resident_lastname = serializers.CharField(source='residentid.userid.lastname', read_only=True)
+    resident_address = serializers.SerializerMethodField()
+    service_name = serializers.CharField(source='serviceid.servicename', read_only=True)
+    
+    class Meta:
+        model = Booking
+        # ADDED 'paymentstatus' here
+        fields = ['bookingid', 'resident_name', 'resident_lastname', 'resident_address', 'service_name', 'bookingdate', 'status', 'paymentstatus', 'price']
+
+    def get_resident_address(self, obj):
+        res = obj.residentid
+        # Safe access to address fields
+        h_no = getattr(res, 'house_no', getattr(res, 'houseno', ''))
+        parts = [h_no, res.street, res.thana, res.district]
+        return ", ".join([p for p in parts if p]) if res else "N/A"
+
+class ProviderProfileSerializer(serializers.ModelSerializer):
+    # --- User Model Fields ---
+    first_name = serializers.CharField(source='userid.firstname')
+    last_name = serializers.CharField(source='userid.lastname')
+    email = serializers.EmailField(source='userid.email', read_only=True) # Read-only for safety
+    date_of_birth = serializers.DateField(source='userid.date_of_birth', required=False, allow_null=True)
+    gender = serializers.CharField(source='userid.gender', required=False, allow_blank=True)
+    
+    # Community ID (Handling ForeignKey)
+    community_id = serializers.PrimaryKeyRelatedField(
+        source='userid.communityid', 
+        queryset=Community.objects.all(),
+        required=False, 
+        allow_null=True
+    )
+    
+    # --- Phone Number (Separate Table) ---
+    phone_number = serializers.SerializerMethodField()
+
+    # --- Computed Rating ---
+    rating = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Serviceprovider
+        fields = [
+            'providerid', 'first_name', 'last_name', 'email', 'phone_number', 
+            'date_of_birth', 'gender', 'community_id', 
+            'subrole', 'availability_status', 'workinghours', 'service_area', 
+            'certificationfile', 'rating'
+        ]
+
+    def get_phone_number(self, obj):
+        try:
+            return UserPhonenumber.objects.get(userid=obj.userid).phonenumber
+        except UserPhonenumber.DoesNotExist:
+            return ""
+
+    def get_rating(self, obj):
+        avg = Review.objects.filter(providerid=obj).aggregate(Avg('rating'))['rating__avg']
+        return round(avg, 1) if avg else 0
+
+class ProviderReviewSerializer(serializers.ModelSerializer):
+    client_name = serializers.SerializerMethodField()
+    service_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Review
+        # IMPORTANT: Ensure these field names match your Review model columns
+        # If your model uses 'reviewID' or 'createdAt', change them here.
+        fields = ['reviewid', 'client_name', 'service_name', 'rating', 'description', 'createdat']
+
+    def get_client_name(self, obj):
+        try:
+            # Safely navigate: Review -> Resident -> User -> Firstname
+            return f"{obj.residentid.userid.firstname} {obj.residentid.userid.lastname}"
+        except:
+            return "Resident"
+
+    def get_service_name(self, obj):
+        try:
+            # Try getting service from direct link or booking link
+            if hasattr(obj, 'serviceid') and obj.serviceid:
+                return obj.serviceid.servicename
+            if hasattr(obj, 'bookingid') and obj.bookingid:
+                return obj.bookingid.serviceid.servicename
+        except:
+            pass
+        return "Service"

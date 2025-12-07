@@ -1,25 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
-    Grid, 
-    Calendar, 
-    Briefcase, 
-    Star, 
-    User, 
-    LogOut, 
-    Save,
-    Camera,
-    MapPin,
-    Mail,
-    Phone,
-    Clock,
-    DollarSign
+    Grid, Calendar, Briefcase, Star, User, LogOut, Save,
+    Phone, Map, FileText, CalendarDays, Users, Home, Clock
 } from 'lucide-react';
 import { Container, Row, Col, Form, Button, Card, Spinner, Alert, Image } from 'react-bootstrap';
-import './ServiceProviderProfileSettings.css';
+import './ServiceProviderProfileSettings.css'; 
 import { api } from "../../api/client"; 
 
-// --- Internal Sidebar Component ---
 const Sidebar = ({ handleLogout }) => {
     const location = useLocation();
     
@@ -35,28 +23,21 @@ const Sidebar = ({ handleLogout }) => {
 
     return (
         <aside className="dashboard-sidebar">
-            <div className="sidebar-brand">
-                Aequora
-            </div>
-            
+            <div className="sidebar-brand">Aequora</div>
             <nav className="sidebar-nav">
-                {navLinks.map((link) => {
-                    const active = isActive(link.to);
-                    return (
-                        <Link 
-                            key={link.to} 
-                            to={link.to} 
-                            className={`nav-item ${active ? 'active' : ''}`}
-                        >
-                            <link.icon className="nav-icon" size={20} />
-                            <span>{link.label}</span>
-                        </Link>
-                    );
-                })}
+                {navLinks.map((link) => (
+                    <Link 
+                        key={link.to} 
+                        to={link.to} 
+                        className={`nav-item ${isActive(link.to) ? 'active' : ''}`}
+                    >
+                        <link.icon size={20} />
+                        <span>{link.label}</span>
+                    </Link>
+                ))}
             </nav>
-
             <div className="sidebar-footer">
-                <button className="logout-button" onClick={handleLogout}>
+                <button onClick={handleLogout} className="logout-btn">
                     <LogOut size={20} />
                     <span>Logout</span>
                 </button>
@@ -65,81 +46,85 @@ const Sidebar = ({ handleLogout }) => {
     );
 };
 
-// --- Main Profile Settings Component ---
 const ServiceProviderProfileSettings = () => {
-    const navigate = useNavigate();
+    const navigate = useNavigate(); // Hook for navigation
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     
-    // State mapped to models.py
+    const [communities, setCommunities] = useState([]);
+    const [selectedFile, setSelectedFile] = useState(null);
+    const [currentFileUrl, setCurrentFileUrl] = useState(null);
+
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
-        email: '',
-        phoneNumber: '',
-        profileImage: '', 
-        serviceCategory: '',
-        experienceYears: 0,
-        hourlyRate: 0.00,
-        bio: '',
-        availabilityStatus: 'Available', 
-        city: '',
-        postalCode: ''
+        first_name: '',
+        last_name: '',
+        phone_number: '',   
+        date_of_birth: '', 
+        gender: '',        
+        community_id: '',
+        sub_role: '',             
+        service_area: '',        
+        working_hours: '',        
+        availability_status: 'Available', 
     });
 
+    // --- Logout Logic ---
     const handleLogout = () => {
-        localStorage.removeItem('access'); 
+        localStorage.removeItem('access');
         localStorage.removeItem('refresh');
         navigate('/login');
     };
 
-    // Helper to handle broken images
     const handleImageError = (e) => {
         e.target.onerror = null; 
-        e.target.src = `https://ui-avatars.com/api/?name=${formData.firstName || 'User'}+${formData.lastName || ''}&background=random&color=fff`;
+        e.target.src = `https://ui-avatars.com/api/?name=${formData.first_name || 'User'}+${formData.last_name || ''}&background=random&color=fff`;
     };
 
-    // --- Fetch Profile Data ---
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchInitialData = async () => {
             try {
-                const response = await api.get('/service-provider/profile/');
-                const data = response.data;
-                
+                const { data: profileData } = await api.get('/provider/profile/');
+                const { data: communitiesData } = await api.get('/communities/');
+                setCommunities(communitiesData);
+
                 setFormData({
-                    firstName: data.firstname || '',
-                    lastName: data.lastname || '',
-                    email: data.email || '',
-                    phoneNumber: data.phonenumber || '',
-                    profileImage: data.profileimage || '',
-                    
-                    serviceCategory: data.servicecategory || '',
-                    experienceYears: data.experienceyears || 0,
-                    hourlyRate: data.hourlyrate || 0,
-                    bio: data.bio || '',
-                    availabilityStatus: data.availabilitystatus || 'Available',
-                    
-                    city: data.city || '',
-                    postalCode: data.postalcode || ''
+                    first_name: profileData.first_name || '',
+                    last_name: profileData.last_name || '',
+                    phone_number: profileData.phone_number || '',
+                    date_of_birth: profileData.date_of_birth || '',
+                    gender: profileData.gender || '',
+                    community_id: profileData.community_id || '',
+                    sub_role: profileData.subrole || '', 
+                    service_area: profileData.service_area || '',
+                    working_hours: profileData.workinghours || '', 
+                    availability_status: profileData.availability_status || 'Available',
                 });
+                
+                if (profileData.certificationfile) {
+                    setCurrentFileUrl(profileData.certificationfile);
+                }
+
             } catch (error) {
-                console.error("Failed to fetch profile", error);
-                setMessage({ type: 'danger', text: 'Could not load profile data.' });
+                console.error("Failed to fetch data", error);
+                setMessage({ type: 'danger', text: 'Could not load profile.' });
             } finally {
                 setLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchInitialData();
     }, []);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData(prev => ({
-            ...prev,
-            [name]: value
-        }));
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleFileChange = (e) => {
+        if (e.target.files && e.target.files[0]) {
+            setSelectedFile(e.target.files[0]);
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -147,37 +132,53 @@ const ServiceProviderProfileSettings = () => {
         setSaving(true);
         setMessage({ type: '', text: '' });
 
+        const dataToSend = new FormData();
+        
+        dataToSend.append('first_name', formData.first_name);
+        dataToSend.append('last_name', formData.last_name);
+        dataToSend.append('phone_number', formData.phone_number);
+        dataToSend.append('gender', formData.gender);
+        
+        if(formData.date_of_birth) dataToSend.append('date_of_birth', formData.date_of_birth);
+        if(formData.community_id) dataToSend.append('community_id', formData.community_id);
+
+        dataToSend.append('subrole', formData.sub_role);
+        dataToSend.append('service_area', formData.service_area);
+        dataToSend.append('workinghours', formData.working_hours);
+        dataToSend.append('availability_status', formData.availability_status);
+
+        if (selectedFile) {
+            dataToSend.append('certificationfile', selectedFile);
+        }
+
         try {
-            await api.put('/service-provider/profile/', formData);
+            await api.put('/provider/profile/', dataToSend, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
             setMessage({ type: 'success', text: 'Profile updated successfully!' });
+            setSelectedFile(null);
         } catch (error) {
             console.error("Update failed", error);
-            setMessage({ type: 'danger', text: 'Failed to update profile. Please try again.' });
+            setMessage({ type: 'danger', text: 'Failed to update profile.' });
         } finally {
             setSaving(false);
         }
     };
 
     if (loading) {
-        return (
-            <div className="dashboard-root d-flex justify-content-center align-items-center">
-                <Spinner animation="border" variant="primary" />
-            </div>
-        );
+        return <div className="d-flex justify-content-center align-items-center vh-100"><Spinner animation="border" variant="primary" /></div>;
     }
 
     return (
-        <div className="dashboard-root">
+        <div className="dashboard-layout">
+            {/* Pass handleLogout here */}
             <Sidebar handleLogout={handleLogout} />
 
             <main className="dashboard-main">
-                <Container fluid className="py-4">
-                    {/* Header */}
-                    <div className="d-flex justify-content-between align-items-center mb-4">
-                        <div>
-                            <h1 className="h3 fw-bold text-gray-800">Profile Settings</h1>
-                            <p className="text-muted">Manage your personal information and service details</p>
-                        </div>
+                <Container fluid>
+                    <div className="dashboard-header mb-4">
+                        <h2 className="mb-1">Profile Settings</h2>
+                        <p className="text-muted">Manage your personal information and service details</p>
                     </div>
 
                     {message.text && (
@@ -188,56 +189,40 @@ const ServiceProviderProfileSettings = () => {
 
                     <Form onSubmit={handleSubmit}>
                         <Row>
-                            {/* Left Column: Visual Profile Card */}
                             <Col lg={4} className="mb-4">
-                                <Card className="border-0 shadow-sm profile-card-side h-100">
+                                <Card className="border-0 shadow-sm h-100">
                                     <Card.Body className="text-center pt-5 pb-4">
                                         <div className="position-relative d-inline-block mb-3">
                                             <Image 
-                                                src={
-                                                    formData.profileImage 
-                                                    ? formData.profileImage 
-                                                    : `https://ui-avatars.com/api/?name=${formData.firstName}+${formData.lastName}&background=0D8ABC&color=fff`
-                                                } 
+                                                src={`https://ui-avatars.com/api/?name=${formData.first_name}+${formData.last_name}&background=0D8ABC&color=fff`} 
                                                 roundedCircle 
-                                                className="profile-avatar mb-3"
+                                                className="mb-3 border border-3 border-white shadow-sm"
                                                 alt="Profile"
                                                 onError={handleImageError}
+                                                style={{ width: '120px', height: '120px', objectFit: 'cover' }}
                                             />
-                                            <div className="avatar-edit-overlay">
-                                                <Camera size={18} className="text-white" />
-                                            </div>
                                         </div>
-                                        <h4 className="fw-bold mb-1">{formData.firstName} {formData.lastName}</h4>
-                                        <p className="text-muted mb-2">{formData.serviceCategory || "Service Provider"}</p>
+                                        <h4 className="fw-bold mb-1">{formData.first_name} {formData.last_name}</h4>
+                                        <p className="text-muted mb-2">{formData.sub_role || "Service Provider"}</p>
                                         
                                         <div className="d-flex justify-content-center gap-2 mb-4">
-                                            <span className={`status-badge ${formData.availabilityStatus.toLowerCase()}`}>
-                                                {formData.availabilityStatus}
+                                            <span className={`badge ${formData.availability_status === 'Available' ? 'bg-success' : 'bg-secondary'}`}>
+                                                {formData.availability_status}
                                             </span>
                                         </div>
 
                                         <hr className="my-4" />
 
-                                        <div className="info-list text-start px-2">
-                                            <div className="info-item mb-3 d-flex align-items-center">
-                                                <Mail size={18} className="text-primary me-3" />
-                                                <span className="text-sm text-dark">{formData.email}</span>
-                                            </div>
-                                            <div className="info-item mb-3 d-flex align-items-center">
+                                        <div className="text-start px-2">
+                                            <div className="mb-3 d-flex align-items-center">
                                                 <Phone size={18} className="text-primary me-3" />
-                                                <span className="text-sm text-dark">{formData.phoneNumber}</span>
-                                            </div>
-                                            <div className="info-item d-flex align-items-center">
-                                                <MapPin size={18} className="text-primary me-3" />
-                                                <span className="text-sm text-dark">{formData.city || "Location not set"}</span>
+                                                <span className="text-dark">{formData.phone_number || 'No phone'}</span>
                                             </div>
                                         </div>
                                     </Card.Body>
                                 </Card>
                             </Col>
 
-                            {/* Right Column: Edit Details Form */}
                             <Col lg={8}>
                                 <Card className="border-0 shadow-sm mb-4">
                                     <Card.Header className="bg-white py-3 border-bottom-0">
@@ -248,49 +233,37 @@ const ServiceProviderProfileSettings = () => {
                                             <Col md={6}>
                                                 <Form.Group>
                                                     <Form.Label className="small fw-bold text-muted">First Name</Form.Label>
-                                                    <Form.Control 
-                                                        type="text" 
-                                                        name="firstName"
-                                                        value={formData.firstName} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    />
+                                                    <Form.Control type="text" name="first_name" value={formData.first_name} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
                                                 <Form.Group>
                                                     <Form.Label className="small fw-bold text-muted">Last Name</Form.Label>
-                                                    <Form.Control 
-                                                        type="text" 
-                                                        name="lastName"
-                                                        value={formData.lastName} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    />
+                                                    <Form.Control type="text" name="last_name" value={formData.last_name} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
                                                 <Form.Group>
-                                                    <Form.Label className="small fw-bold text-muted">Email Address</Form.Label>
-                                                    <Form.Control 
-                                                        type="email" 
-                                                        name="email"
-                                                        value={formData.email} 
-                                                        disabled 
-                                                        className="form-control-custom bg-light"
-                                                    />
+                                                    <Form.Label className="small fw-bold text-muted"><CalendarDays size={14} className="me-1"/> Date of Birth</Form.Label>
+                                                    <Form.Control type="date" name="date_of_birth" value={formData.date_of_birth} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
+                                                <Form.Group>
+                                                    <Form.Label className="small fw-bold text-muted"><Users size={14} className="me-1"/> Gender</Form.Label>
+                                                    <Form.Select name="gender" value={formData.gender} onChange={handleChange}>
+                                                        <option value="">Select Gender</option>
+                                                        <option value="Male">Male</option>
+                                                        <option value="Female">Female</option>
+                                                        <option value="Other">Other</option>
+                                                    </Form.Select>
+                                                </Form.Group>
+                                            </Col>
+                                            
+                                            <Col md={12}>
                                                 <Form.Group>
                                                     <Form.Label className="small fw-bold text-muted">Phone Number</Form.Label>
-                                                    <Form.Control 
-                                                        type="text" 
-                                                        name="phoneNumber"
-                                                        value={formData.phoneNumber} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    />
+                                                    <Form.Control type="text" name="phone_number" value={formData.phone_number} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
                                         </Row>
@@ -303,34 +276,37 @@ const ServiceProviderProfileSettings = () => {
                                     </Card.Header>
                                     <Card.Body>
                                         <Row className="g-3">
+                                            <Col md={12}>
+                                                <Form.Group className="bg-light p-3 rounded border border-primary-subtle">
+                                                    <Form.Label className="small fw-bold text-primary">
+                                                        <Home size={14} className="me-1"/> Community (Required)
+                                                    </Form.Label>
+                                                    <Form.Select 
+                                                        name="community_id"
+                                                        value={formData.community_id}
+                                                        onChange={handleChange}
+                                                        className="form-select-custom border-primary"
+                                                    >
+                                                        <option value="">Select a Community</option>
+                                                        {communities.map(comm => (
+                                                            <option key={comm.communityid} value={comm.communityid}>
+                                                                {comm.name} (ID: {comm.communityid})
+                                                            </option>
+                                                        ))}
+                                                    </Form.Select>
+                                                </Form.Group>
+                                            </Col>
+
                                             <Col md={6}>
                                                 <Form.Group>
-                                                    <Form.Label className="small fw-bold text-muted">Service Category</Form.Label>
-                                                    <Form.Select 
-                                                        name="serviceCategory"
-                                                        value={formData.serviceCategory}
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    >
-                                                        <option value="">Select Category</option>
-                                                        <option value="Plumbing">Plumbing</option>
-                                                        <option value="Electrical">Electrical</option>
-                                                        <option value="Cleaning">Cleaning</option>
-                                                        <option value="Carpentry">Carpentry</option>
-                                                        <option value="Appliance Repair">Appliance Repair</option>
-                                                        <option value="Pest Control">Pest Control</option>
-                                                    </Form.Select>
+                                                    <Form.Label className="small fw-bold text-muted">Sub Role / Category</Form.Label>
+                                                    <Form.Control type="text" name="sub_role" value={formData.sub_role} onChange={handleChange} placeholder="e.g. Plumber" />
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
                                                 <Form.Group>
                                                     <Form.Label className="small fw-bold text-muted">Availability Status</Form.Label>
-                                                    <Form.Select 
-                                                        name="availabilityStatus"
-                                                        value={formData.availabilityStatus}
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    >
+                                                    <Form.Select name="availability_status" value={formData.availability_status} onChange={handleChange}>
                                                         <option value="Available">Available</option>
                                                         <option value="Busy">Busy</option>
                                                         <option value="Offline">Offline</option>
@@ -339,61 +315,39 @@ const ServiceProviderProfileSettings = () => {
                                             </Col>
                                             <Col md={6}>
                                                 <Form.Group>
-                                                    <Form.Label className="small fw-bold text-muted">
-                                                        <Clock size={14} className="me-1"/> Experience (Years)
-                                                    </Form.Label>
-                                                    <Form.Control 
-                                                        type="number" 
-                                                        name="experienceYears"
-                                                        value={formData.experienceYears} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    />
+                                                    <Form.Label className="small fw-bold text-muted"><Map size={14} className="me-1"/> Service Area</Form.Label>
+                                                    <Form.Control type="text" name="service_area" value={formData.service_area} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
                                             <Col md={6}>
                                                 <Form.Group>
-                                                    <Form.Label className="small fw-bold text-muted">
-                                                        <DollarSign size={14} className="me-1"/> Hourly Rate (Tk)
-                                                    </Form.Label>
-                                                    <Form.Control 
-                                                        type="number" 
-                                                        name="hourlyRate"
-                                                        value={formData.hourlyRate} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                    />
+                                                    <Form.Label className="small fw-bold text-muted"><Clock size={14} className="me-1"/> Working Hours</Form.Label>
+                                                    <Form.Control type="text" name="working_hours" value={formData.working_hours} onChange={handleChange} />
                                                 </Form.Group>
                                             </Col>
+                                            
                                             <Col md={12}>
                                                 <Form.Group>
-                                                    <Form.Label className="small fw-bold text-muted">Bio / Description</Form.Label>
+                                                    <Form.Label className="small fw-bold text-muted">
+                                                        <FileText size={14} className="me-1"/> Certification File
+                                                    </Form.Label>
                                                     <Form.Control 
-                                                        as="textarea" 
-                                                        rows={4}
-                                                        name="bio"
-                                                        value={formData.bio} 
-                                                        onChange={handleChange}
-                                                        className="form-control-custom"
-                                                        placeholder="Describe your services, skills, and why clients should hire you..."
+                                                        type="file" 
+                                                        onChange={handleFileChange}
                                                     />
+                                                    {currentFileUrl && !selectedFile && (
+                                                        <div className="mt-2 text-sm text-success small">
+                                                            ✓ Current file uploaded (Hidden for security)
+                                                        </div>
+                                                    )}
+                                                    <Form.Text className="text-muted">Upload PDF or Image of your certification.</Form.Text>
                                                 </Form.Group>
                                             </Col>
                                         </Row>
                                         
                                         <div className="mt-4 d-flex justify-content-end">
-                                            <Button 
-                                                type="submit" 
-                                                className="save-btn px-4 py-2 d-flex align-items-center gap-2"
-                                                disabled={saving}
-                                            >
-                                                {saving ? (
-                                                    <Spinner size="sm" animation="border" />
-                                                ) : (
-                                                    <>
-                                                        <Save size={18} /> Save Changes
-                                                    </>
-                                                )}
+                                            <Button type="submit" className="save-btn px-4 py-2 d-flex align-items-center gap-2" disabled={saving}>
+                                                {saving ? <Spinner size="sm" animation="border" /> : <><Save size={18} /> Save Changes</>}
                                             </Button>
                                         </div>
                                     </Card.Body>

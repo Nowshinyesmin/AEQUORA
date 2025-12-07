@@ -14,18 +14,18 @@ import Login from "./pages/LoginPage/LoginPage";
 import Register from "./pages/RegistrationPage/RegistrationPage";
 
 // --- Service Provider Pages ---
-import ServiceProviderDashboard from "./pages/ServiceProviderDashboard/ServiceProviderDashboard"; 
-import ManageBookings from "./pages/ManageBookings/ManageBookings";
-import ManageServices from "./pages/ManageServices/ManageServices";
-import CustomerReviews from "./pages/CustomerReviews/CustomerReviews";
-import ServiceProviderProfileSettings from "./pages/ServiceProviderProfileSettings/ServiceProviderProfileSettings"; 
+import ServiceProviderDashboard from "./pages/ServiceProviderDashboard/ServiceProviderDashboard.jsx";
+import ManageBookings from "./pages/ManageBookings/ManageBookings.jsx";
+import ManageServices from "./pages/ManageServices/ManageServices.jsx";
+import CustomerReviews from "./pages/CustomerReviews/CustomerReviews.jsx";
+import ServiceProviderProfileSettings from "./pages/ServiceProviderProfileSettings/ServiceProviderProfileSettings.jsx";
 
 // --- Authority Pages ---
 import AuthorityDashboard from "./pages/AuthorityDashboard/AuthorityDashboard.jsx";
 import ManageIssues from "./pages/ManageIssues/ManageIssues.jsx";
 import AnalyticsReports from "./pages/AnalyticsReports/AnalyticsReports.jsx";
 import EventsRequests from "./pages/EventsRequests/EventsRequests.jsx";
-import CommunityVoting from "./pages/CommunityVoting/CommunityVoting.jsx"; // Authority Voting View
+import CommunityVoting from "./pages/CommunityVoting/CommunityVoting.jsx";
 import AuthorityEmergency from "./pages/AuthorityEmergency/AuthorityEmergency.jsx";
 
 // --- Resident Pages ---
@@ -35,7 +35,7 @@ import BookService from "./pages/BookService/BookService.jsx";
 import CommunityEvents from "./pages/CommunityEvents/CommunityEvents.jsx";
 import EmergencySOS from "./pages/EmergencySOS/EmergencySOS.jsx";
 import ResidentProfileSettings from "./pages/ResidentProfileSettings/ResidentProfileSettings.jsx";
-// NEW IMPORTS
+// NEW IMPORTS (from File 1)
 import ResidentCommunityVoting from "./pages/ResidentCommunityVoting/ResidentCommunityVoting.jsx";
 import ResidentNotification from "./pages/ResidentNotification/ResidentNotification.jsx";
 

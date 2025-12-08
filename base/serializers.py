@@ -213,6 +213,7 @@ class ProviderServiceSerializer(serializers.ModelSerializer):
         model = Service
         fields = ['serviceid', 'servicename', 'description', 'price', 'availability']
 
+
 # --- Find ProviderBookingSerializer and REPLACE it with this: ---
 class ProviderBookingSerializer(serializers.ModelSerializer):
     resident_name = serializers.CharField(source='residentid.userid.firstname', read_only=True)

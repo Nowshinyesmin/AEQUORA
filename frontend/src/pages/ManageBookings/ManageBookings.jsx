@@ -48,7 +48,7 @@ const Sidebar = ({ handleLogout }) => {
                 ))}
             </nav>
             <div className="sidebar-footer">
-                <button onClick={performLogout} className="logout-btn">
+                <button onClick={performLogout} className="logout-button">
                     <LogOut size={20} />
                     <span>Logout</span>
                 </button>
@@ -140,9 +140,9 @@ const ManageBookings = ({ handleLogout }) => {
     );
 
     return (
-        <div className="dashboard-layout">
+        <div className="dashboard-root">
             <Sidebar handleLogout={handleLogout} />
-            <main className="dashboard-main">
+            <main className="main-content">
                 <Container fluid className="p-4">
                     <div className="d-flex justify-content-between align-items-center mb-4">
                         <div className="d-flex align-items-center gap-3">

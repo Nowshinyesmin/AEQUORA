@@ -1,18 +1,9 @@
+# base/urls.py
 from django.urls import path
 import base.signals
 from .views import (
-    # --- Admin (hard-coded admin panel) ---
-    AdminProfileView,
-    AdminPasswordChangeView,
-    AdminCreateCommunityView,
-    AdminCommunityListView,
-    AdminCommunityDetailView,
-    AdminUserListView,
-    AdminUserStatusToggleView,
-    AdminDashboardStatsView,
-
     # --- Authentication & Core ---
-    RegisterView,
+    RegisterView, 
     CustomLoginView,
     ChangePasswordView,
     UserMeView,
@@ -34,7 +25,7 @@ from .views import (
     IssueVoteView,
     NotificationView,
 
-    # --- bKash Payment Integration ---
+    # --- Bkash Payment Integration ---
     BkashInitiateView,
     BkashCallbackView,
     BkashQueryPaymentView,
@@ -51,14 +42,14 @@ from .views import (
     AuthorityEventRequestsView,
     AuthorityEventActionView,
 
-    # --- Service Provider Views ---
-    ProviderDashboardStatsView,
-    ProviderServiceManageView,
+    # --- Service Provider Views (Added from File 2) ---
+    ProviderDashboardStatsView, 
+    ProviderServiceManageView, 
     ProviderServiceDetailView,
-    ProviderBookingManageView,
-    ProviderBookingStatusUpdateView,
+    ProviderBookingManageView, 
+    ProviderBookingStatusUpdateView, 
     ProviderProfileView,
-    ProviderReviewsListView,
+    ProviderReviewsListView
 )
 
 urlpatterns = [
@@ -76,7 +67,7 @@ urlpatterns = [
     # ==========================
     # Dashboard
     path('resident/dashboard-stats/', ResidentDashboardView.as_view(), name='dashboard_stats'),
-
+    
     # Emergency SOS
     path('resident/sos/', EmergencySOSView.as_view(), name='emergency_sos'),
 
@@ -97,7 +88,7 @@ urlpatterns = [
     # Community Voting
     path('resident/community-issues/', CommunityIssueListView.as_view(), name='community_issues'),
     path('resident/vote/', IssueVoteView.as_view(), name='cast_vote'),
-
+    
     # Notifications
     path('resident/notifications/', NotificationView.as_view(), name='notifications'),
 
@@ -113,7 +104,7 @@ urlpatterns = [
     # ==========================
     path('authority/dashboard-stats/', AuthorityDashboardStatsView.as_view(), name='auth_dashboard'),
     path('authority/departments/', DepartmentListView.as_view(), name='auth_dept_list'),
-
+    
     # Issues & Analytics
     path('issues/', AuthorityIssueListView.as_view(), name='auth_issue_list'),
     path('issues/<int:pk>/', AuthorityIssueDetailView.as_view(), name='auth_issue_detail'),
@@ -141,20 +132,5 @@ urlpatterns = [
     path('provider/bookings/<int:pk>/update/', ProviderBookingStatusUpdateView.as_view(), name='provider_booking_update'),
     path('provider/profile/', ProviderProfileView.as_view(), name='provider_profile'),
     path('provider/reviews/', ProviderReviewsListView.as_view(), name='provider_reviews'),
-
-    # ==========================
-    # HARD-CODED ADMIN PANEL
-    # ==========================
-    path('admin/profile/', AdminProfileView.as_view(), name='admin_profile'),
-    path('admin/change-password/', AdminPasswordChangeView.as_view(), name='admin_change_password'),
-    path("admin/create-community/", AdminCreateCommunityView.as_view(), name="admin-create-community"),
-    path("admin/communities/", AdminCommunityListView.as_view(), name="admin-community-list"),
-    path("admin/communities/<int:pk>/", AdminCommunityDetailView.as_view(), name="admin-community-detail"),
-    path("admin/users/", AdminUserListView.as_view(), name="admin-user-list"),
-    path(
-        "admin/users/<int:pk>/toggle-status/",
-        AdminUserStatusToggleView.as_view(),
-        name="admin-user-toggle-status",
-    ),
-    path("admin/dashboard-stats/", AdminDashboardStatsView.as_view(), name="admin-dashboard-stats"),
+    
 ]

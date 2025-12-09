@@ -27,7 +27,7 @@ from .serializers import (
     ServiceSerializer, BookingSerializer, CommunitySerializer,
     CommunityIssueSerializer, NotificationSerializer, EventRequestSerializer,
     AuthorityIssueSerializer, AuthorityEventSerializer, AuthoritySOSSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer, AuthorityProfileSerializer
 )
 
 # ... [Authentication Views: CustomLoginView, RegisterView, ChangePasswordView remain same] ...
@@ -682,3 +682,33 @@ class BkashQueryPaymentView(APIView):
         headers = {"Authorization": token, "X-APP-Key": BKASH_APP_KEY, "Accept": "application/json"}
         response = requests.get(query_url, headers=headers)
         return Response(response.json())
+    
+#SAYEDA NUSRAT
+
+class AuthorityProfileView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_authority(self, request):
+        try:
+            user_email = UserEmail.objects.get(email=request.user.email)
+            return Authority.objects.get(userid=user_email.userid)
+        except (UserEmail.DoesNotExist, Authority.DoesNotExist):
+            return None
+
+    def get(self, request):
+        authority = self.get_authority(request)
+        if not authority:
+            return Response({"error": "Authority profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        serializer = AuthorityProfileSerializer(authority)
+        return Response(serializer.data)
+
+    def put(self, request):
+        authority = self.get_authority(request)
+        if not authority:
+            return Response({"error": "Authority profile not found"}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = AuthorityProfileSerializer(authority, data=request.data, partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

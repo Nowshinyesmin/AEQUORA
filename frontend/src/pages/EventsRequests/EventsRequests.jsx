@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Calendar, Vote, Siren, 
-  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle 
+  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle, User // <--- Added User icon
 } from "lucide-react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
 import { api } from "../../api/client"; 
@@ -12,14 +12,12 @@ import "./EventsRequests.css";
 // --- Authority Sidebar (Now fetches data dynamically) ---
 const AuthoritySidebar = () => {
   const navigate = useNavigate();
-  // FIXED: Added state to store fetched user info
   const [userInfo, setUserInfo] = useState({
     firstName: '',
     lastName: '',
     role: 'Authority'
   });
 
-  // FIXED: Added fetch logic
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -47,7 +45,6 @@ const AuthoritySidebar = () => {
     <aside className="dashboard-sidebar">
       <div className="sidebar-brand">Aequora</div>
       <div className="user-profile-section">
-        {/* FIXED: Display dynamic name */}
         <div className="user-name-display">{displayName}</div>
         <div className="user-role-display">{userInfo.role.toUpperCase()}</div>
       </div>
@@ -69,6 +66,10 @@ const AuthoritySidebar = () => {
         </Link>
         <Link to="/authority/sos" className="nav-link-custom" style={{ color: '#ef4444' }}>
           <Siren size={20} className="nav-icon" />Emergency SOS
+        </Link>
+        {/* --- Added Profile Link --- */}
+        <Link to="/authority/profile" className="nav-link-custom">
+          <User size={20} className="nav-icon" />Profile
         </Link>
       </nav>
       <div className="sidebar-footer">

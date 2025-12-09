@@ -15,7 +15,8 @@ import {
   TrendingUp,
   MapPin,
   Clock,
-  Smile
+  Smile,
+  User // <--- Added User icon
 } from 'lucide-react';
 import { Row, Col, Container, Card, ProgressBar, Button } from 'react-bootstrap';
 import { api } from "../../api/client";
@@ -149,6 +150,12 @@ const AnalyticsReports = () => {
           <Link to="/authority/emergency" className="nav-link-custom text-danger">
             <Siren size={20} className="nav-icon" />
             Emergency SOS
+          </Link>
+
+          {/* --- Added Profile Link --- */}
+          <Link to="/authority/profile" className="nav-link-custom">
+            <User size={20} className="nav-icon" />
+            Profile
           </Link>
         </nav>
 

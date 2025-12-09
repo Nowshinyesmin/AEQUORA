@@ -9,8 +9,10 @@ __pycache__/
 # Node / React
 frontend/node_modules/
 frontend/dist/
+node_modules/
 
 # VS Code
 .vscode/
 .env
+
 

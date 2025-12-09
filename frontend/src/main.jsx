@@ -27,6 +27,7 @@ import AnalyticsReports from "./pages/AnalyticsReports/AnalyticsReports.jsx";
 import EventsRequests from "./pages/EventsRequests/EventsRequests.jsx";
 import CommunityVoting from "./pages/CommunityVoting/CommunityVoting.jsx"; // Authority Voting View
 import AuthorityEmergency from "./pages/AuthorityEmergency/AuthorityEmergency.jsx";
+import AuthorityProfileSettings from "./pages/AuthorityProfileSettings/AuthorityProfileSettings.jsx";
 
 // --- Resident Pages ---
 import ResidentDashboard from "./pages/ResidentDashboard/ResidentDashboard.jsx";
@@ -55,6 +56,7 @@ createRoot(document.getElementById("root")).render(
         <Route path="/authority/events" element={<EventsRequests />} />
         <Route path="/authority/voting" element={<CommunityVoting />} />
         <Route path="/authority/emergency" element={<AuthorityEmergency />} />
+        <Route path="/authority/profile" element={<AuthorityProfileSettings />} />
 
         {/* Resident Routes */}
         <Route path="/resident/dashboard" element={<ResidentDashboard />} />

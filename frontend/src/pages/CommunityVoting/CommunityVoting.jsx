@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Siren, Calendar, Vote, LogOut,
-  ThumbsUp, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Trophy, ListFilter
+  ThumbsUp, TrendingUp, AlertTriangle, ArrowUp, ArrowDown, Trophy, ListFilter, User // <--- Added User icon
 } from 'lucide-react';
 import { api } from "../../api/client"; 
 import './CommunityVoting.css';
@@ -123,6 +123,8 @@ const CommunityVoting = () => {
           <Link to="/authority/events" className="nav-link-custom"><Calendar size={20} className="nav-icon" /> Events & Requests</Link>
           <Link to="/authority/voting" className="nav-link-custom active"><Vote size={20} className="nav-icon" /> Community Voting</Link>
           <Link to="/authority/emergency" className="nav-link-custom text-danger"><Siren size={20} className="nav-icon" /> Emergency SOS</Link>
+          {/* --- Added Profile Link --- */}
+          <Link to="/authority/profile" className="nav-link-custom"><User size={20} className="nav-icon" /> Profile</Link>
         </nav>
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="logout-btn"><LogOut size={18} className="me-2" /> Logout</button>

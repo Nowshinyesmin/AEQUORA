@@ -199,3 +199,61 @@ class EventRequestSerializer(serializers.ModelSerializer):
 class ChangePasswordSerializer(serializers.Serializer):
     old_password = serializers.CharField(required=True)
     new_password = serializers.CharField(required=True)
+
+
+#sAYEDA NUSRAT
+
+class AuthorityProfileSerializer(serializers.ModelSerializer):
+    firstname = serializers.CharField(source='userid.firstname')
+    lastname = serializers.CharField(source='userid.lastname')
+    email = serializers.SerializerMethodField()
+    
+    # --- ADD THIS FIELD ---
+    # This maps the serializer field 'communityid' to the User model's 'communityid' field
+    communityid = serializers.PrimaryKeyRelatedField(
+        queryset=Community.objects.all(), 
+        source='userid.communityid', 
+        required=False, 
+        allow_null=True
+    )
+    # ----------------------
+
+    # ... keep existing authority specific fields ...
+    departmentname = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    # ... (designation, assignedarea, houseno, street, thana, district) ...
+
+    class Meta:
+        model = Authority
+        fields = [
+            'authorityid', 'firstname', 'lastname', 'email', 
+            'departmentname', 'designation', 'assignedarea',
+            'houseno', 'street', 'thana', 'district',
+            'communityid' # <--- ADD THIS to the fields list
+        ]
+
+    # ... keep existing get_email method ...
+
+    def update(self, instance, validated_data):
+        # Update User model fields
+        user_data = validated_data.pop('userid', {})
+        if user_data:
+            user = instance.userid
+            user.firstname = user_data.get('firstname', user.firstname)
+            user.lastname = user_data.get('lastname', user.lastname)
+            
+            # --- ADD THIS BLOCK ---
+            # Check if communityid is present in the nested user data and update it
+            if 'communityid' in user_data:
+                user.communityid = user_data['communityid']
+            # ----------------------
+            
+            user.save()
+
+        # ... keep existing Authority model fields update logic ...
+        instance.departmentname = validated_data.get('departmentname', instance.departmentname)
+        # ... (rest of your existing fields)
+        
+        instance.save()
+        return instance
+
+

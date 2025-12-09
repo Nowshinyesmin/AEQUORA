@@ -13,6 +13,7 @@ import {
   CheckCircle,
   Clock,
   AlertTriangle,
+  User // <--- Added User icon
 } from 'lucide-react';
 import { Row, Col, Container, Card, ProgressBar } from 'react-bootstrap';
 
@@ -142,6 +143,12 @@ function AuthorityDashboard() {
           <Link to="/authority/emergency" className="nav-link-custom text-danger">
             <Siren size={20} className="nav-icon" />
             Emergency SOS
+          </Link>
+
+          {/* --- Added Profile Link --- */}
+          <Link to="/authority/profile" className="nav-link-custom">
+            <User size={20} className="nav-icon" />
+            Profile
           </Link>
         </nav>
 

@@ -34,6 +34,7 @@ from .views import (
     AuthorityEventView,
     AuthorityEventRequestsView,
     AuthorityEventActionView,
+    AuthorityProfileView,
 
     # Community & Notification
     CommunityIssueListView,
@@ -104,4 +105,6 @@ urlpatterns = [
     path('authority/events/<int:pk>/action/', AuthorityEventActionView.as_view(), name='auth_event_action'),
     path('authority/events/<int:pk>/', AuthorityEventActionView.as_view(), name='auth_event_delete'),
     path('authority/voting-results/', VotingResultsView.as_view(), name='voting_results'),
+    # Authority Profile
+    path('authority/profile/', AuthorityProfileView.as_view(), name='authority_profile'),
 ]

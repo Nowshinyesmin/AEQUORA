@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
   LayoutDashboard, ClipboardList, BarChart2, Siren, Calendar, Vote, LogOut,
-  MapPin, CheckCircle, ShieldAlert, Ambulance, Flame
+  MapPin, CheckCircle, ShieldAlert, Ambulance, Flame, User // <--- Added User icon
 } from 'lucide-react';
 import { Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import { api } from "../../api/client"; 
@@ -142,6 +142,8 @@ const AuthorityEmergency = () => {
           <Link to="/authority/events" className="nav-link-custom"><Calendar size={20} className="nav-icon" /> Events & Requests</Link>
           <Link to="/authority/voting" className="nav-link-custom"><Vote size={20} className="nav-icon" /> Community Voting</Link>
           <Link to="/authority/sos" className="nav-link-custom text-danger active-danger"><Siren size={20} className="nav-icon" /> Emergency SOS</Link>
+          {/* --- Added Profile Link --- */}
+          <Link to="/authority/profile" className="nav-link-custom"><User size={20} className="nav-icon" /> Profile</Link>
         </nav>
         <div className="sidebar-footer">
           <button onClick={handleLogout} className="logout-btn"><LogOut size={18} className="me-2" /> Logout</button>

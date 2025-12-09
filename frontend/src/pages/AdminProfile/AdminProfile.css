@@ -1,0 +1,314 @@
+/* frontend/src/pages/AdminProfile/AdminProfile.css */
+
+/* Make the whole app fill the screen and use the light background */
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  min-height: 100%;
+  background-color: #f9fafb;
+}
+
+/* Root wrapper */
+.dashboard-root {
+  min-height: 100vh;
+  width: 100vw;
+  background-color: #f9fafb;
+  display: flex;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
+}
+
+/* ----- SIDEBAR ----- */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.dashboard-sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+.dashboard-sidebar::-webkit-scrollbar-thumb {
+  background-color: #e5e7eb;
+  border-radius: 4px;
+}
+
+.sidebar-brand {
+  padding: 1.5rem;
+  padding-bottom: 1rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #111827;
+  text-align: center;
+}
+
+.user-profile-section {
+  padding: 0 1.5rem 1.5rem 1.5rem;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  align-items: center;
+  text-align: center;
+}
+
+.user-name-display {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: #111827;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-role-display {
+  font-size: 0.8rem;
+  color: #6b7280;
+}
+
+.sidebar-nav {
+  padding: 1.5rem 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.nav-link-custom {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  color: #4b5563;
+  text-decoration: none;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  width: 100%;
+  text-align: left;
+}
+
+.nav-link-custom:hover {
+  background-color: #f9fafb;
+  color: #111827;
+}
+
+.nav-link-custom.active {
+  background-color: #f3f4f6;
+  color: #111827;
+  font-weight: 600;
+}
+
+.nav-icon {
+  margin-right: 0.75rem;
+  min-width: 20px;
+}
+
+.sidebar-footer {
+  padding: 1.5rem;
+  border-top: 1px solid #f3f4f6;
+  background-color: #ffffff;
+  margin-top: auto;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background-color: #ffffff;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  cursor: pointer;
+  justify-content: flex-start;
+}
+
+.logout-btn:hover {
+  background-color: #f9fafb;
+  border-color: #d1d5db;
+  color: #111827;
+}
+
+/* ----- MAIN CONTENT ----- */
+.dashboard-main {
+  margin-left: 260px;
+  flex-grow: 1;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+  box-sizing: border-box;
+  position: relative;
+}
+
+.page-header-mb {
+  margin-bottom: 2rem;
+}
+
+.page-title {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+/* top-right circle */
+.header-right-actions {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.admin-profile-circle {
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  border: none;
+  background-color: #111827;
+  color: #ffffff;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* ----- PROFILE CARDS ----- */
+.profile-card {
+  background-color: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  height: 100%;
+}
+
+.profile-card-header {
+  margin-bottom: 1.5rem;
+}
+
+.profile-card-title-wrap {
+  display: flex;
+  align-items: center;
+  font-weight: 600;
+  color: #111827;
+  font-size: 1.05rem;
+}
+
+.profile-card-caption {
+  display: block;
+  margin-top: 0.25rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+}
+
+.profile-actions {
+  margin-top: 1.25rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+}
+
+/* ----- FORM ELEMENTS: fix label + input alignment ----- */
+.profile-card label {
+  display: block;              /* label on its own line */
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+.profile-card input,
+.profile-card select {
+  width: 100%;                 /* all inputs same width */
+  max-width: 320px;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  color: #111827;
+  background-color: #ffffff;
+  box-sizing: border-box;
+}
+
+/* nicer focus */
+.profile-card input:focus,
+.profile-card select:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 1px #4f46e5;
+}
+
+/* buttons */
+.btn-primary-rounded {
+  background-color: #111827;
+  border-color: #111827;
+  border-radius: 999px;
+  padding-inline: 1.5rem;
+  font-weight: 500;
+}
+
+.btn-primary-rounded:hover {
+  background-color: #020617;
+  border-color: #020617;
+}
+
+.btn-outline-rounded {
+  background-color: #ffffff;
+  border-radius: 999px;
+  padding-inline: 1.5rem;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+  color: #111827;
+}
+
+.btn-outline-rounded:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+/* responsive */
+@media (max-width: 900px) {
+  .dashboard-sidebar {
+    position: relative;
+    width: 100%;
+    height: auto;
+  }
+
+  .dashboard-main {
+    margin-left: 0;
+    width: 100%;
+    padding: 1.5rem;
+  }
+
+  .header-right-actions {
+    position: static;
+    margin-bottom: 1rem;
+    justify-content: flex-end;
+  }
+}

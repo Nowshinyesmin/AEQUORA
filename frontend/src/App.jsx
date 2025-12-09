@@ -1,3 +1,5 @@
+// src/App.jsx  (optional, not used by main.jsx right now)
+
 import { useEffect, useState } from "react";
 import { api } from "./api/client";
 
@@ -6,7 +8,7 @@ function App() {
 
   useEffect(() => {
     api
-      .get("ping/") // -> http://127.0.0.1:8000/api/ping/
+      .get("ping/")
       .then((res) => setData(res.data))
       .catch((err) => {
         console.error(err);

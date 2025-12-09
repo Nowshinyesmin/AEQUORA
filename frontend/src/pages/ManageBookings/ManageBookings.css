@@ -1,7 +1,8 @@
 /* frontend/src/pages/ManageBookings/ManageBookings.css */
 
 /* --- Main Layout (Matches ServiceProviderDashboard) --- */
-.dashboard-root {
+.dashboard-root,
+.dashboard-layout {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
@@ -75,7 +76,8 @@
   background-color: #f9fafb;
 }
 
-.logout-button {
+.logout-button,
+.logout-btn {
   width: 100%;
   display: flex;
   align-items: center;
@@ -91,13 +93,15 @@
   transition: all 0.2s;
 }
 
-.logout-button:hover {
+.logout-button:hover,
+.logout-btn:hover {
   background-color: #fee2e2;
   border-color: #fca5a5;
 }
 
 /* --- Main Content Area --- */
-.main-content {
+.main-content,
+.dashboard-main {
   flex: 1;
   margin-left: 260px;
   padding: 2rem;

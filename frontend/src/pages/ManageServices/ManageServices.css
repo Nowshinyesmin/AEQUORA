@@ -86,7 +86,7 @@
     justify-content: center;
     width: 100%;
     padding: 0.75rem 1rem;
-    background-color: #ffffff; /* White */
+    background-color: #ffffff; /* Light Red */
     color: #dc2626; /* Red Text */
     border: 1px solid #cdcdcd;
     border-radius: 8px;
@@ -188,11 +188,6 @@
     outline: none;
     width: 100%;
     font-size: 0.9rem;
-}
-
-.btn-filter {
-    display: flex;
-    align-items: center;
 }
 
 /* Table Specifics */

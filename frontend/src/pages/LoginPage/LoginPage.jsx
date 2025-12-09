@@ -12,6 +12,8 @@ import { api } from "../../api/client";
 const RESIDENT_DASHBOARD_PATH = "/resident/dashboard";
 const AUTHORITY_DASHBOARD_PATH = "/authority/dashboard";
 const SERVICE_PROVIDER_DASHBOARD_PATH = "/serviceprovider/dashboard";
+const ADMIN_DASHBOARD_PATH = "/AdminDashboard";
+
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -51,6 +53,9 @@ function LoginPage() {
         targetPath = SERVICE_PROVIDER_DASHBOARD_PATH;
       } else if (data.role === 'Authority') {
         targetPath = AUTHORITY_DASHBOARD_PATH;
+      } else if (data.role === 'Admin') {
+        // NEW: hard-coded admin route
+        targetPath = ADMIN_DASHBOARD_PATH;
       }
 
       navigate(targetPath);

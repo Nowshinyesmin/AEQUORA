@@ -1,5 +1,3 @@
-// frontend/src/pages/ManageServices/ManageServices.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
@@ -11,33 +9,31 @@ import {
     Plus, 
     Edit2, 
     Trash2, 
-    Search,
-    Filter,
-    LogOut 
+    LogOut,
+    CheckCircle,
+    XCircle,
+    Briefcase as ServiceIcon
 } from 'lucide-react';
 import { 
     Container, 
-    Row, 
-    Col, 
     Table, 
     Button, 
     Modal, 
     Form, 
     Spinner, 
-    Card 
+    Card,
+    Badge,
+    Alert,
+    Row,
+    Col
 } from 'react-bootstrap';
-
-// Importing the API client wrapper
 import { api } from "../../api/client"; 
-
 import './ManageServices.css';
 
-// --- Internal Sidebar Component ---
-const Sidebar = () => {
+// --- Sidebar Component ---
+const Sidebar = ({ handleLogout }) => {
     const location = useLocation();
-    const navigate = useNavigate();
     
-    // Navigation links matching main.jsx
     const navLinks = [
         { to: '/serviceprovider/dashboard', icon: Grid, label: 'Dashboard' },
         { to: '/serviceprovider/bookings', icon: Calendar, label: 'Manage Bookings' },
@@ -48,38 +44,32 @@ const Sidebar = () => {
 
     const isActive = (path) => location.pathname === path;
 
-    const handleLogout = () => {
-        // Clear tokens and redirect
-        localStorage.removeItem('token'); 
-        navigate('/login');
-    };
-
     return (
         <aside className="dashboard-sidebar">
-            <div className="sidebar-brand">
-                Aequora
+            <div className="sidebar-brand">Aequora</div>
+            <div className="user-profile-section">
+                <div className="profile-avatar-sp">
+                    <Briefcase size={28} />
+                </div>
+                <div className="user-name">My Services</div>
+                <div className="user-role">Service Management</div>
             </div>
             <nav className="sidebar-nav">
                 {navLinks.map((link) => (
-                    <Link
-                        key={link.to}
-                        to={link.to}
-                        className={`sidebar-link ${isActive(link.to) ? 'active' : ''}`}
+                    <Link 
+                        key={link.to} 
+                        to={link.to} 
+                        className={`nav-item ${isActive(link.to) ? 'active' : ''}`}
                     >
-                        <link.icon size={20} className="sidebar-icon" />
+                        <link.icon size={20} className="nav-icon" />
                         <span>{link.label}</span>
                     </Link>
                 ))}
             </nav>
-            
-            {/* Logout Button at Bottom */}
-            <div className="sidebar-footer mt-auto p-3">
-                <button 
-                    onClick={handleLogout} 
-                    className="sidebar-logout-btn"
-                >
-                    <LogOut size={20} className="sidebar-icon" />
-                    <span>Log Out</span>
+            <div className="sidebar-footer">
+                <button onClick={handleLogout} className="logout-btn">
+                    <LogOut size={20} style={{ marginRight: '8px' }} />
+                    Logout
                 </button>
             </div>
         </aside>
@@ -87,276 +77,324 @@ const Sidebar = () => {
 };
 
 const ManageServices = () => {
-    // --- State Management ---
+    const navigate = useNavigate();
     const [services, setServices] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [errorMsg, setErrorMsg] = useState('');
+    
+    // Modal State
     const [showModal, setShowModal] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
     const [currentServiceId, setCurrentServiceId] = useState(null);
+    const [modalLoading, setModalLoading] = useState(false);
 
-    // Form State
+    // Form State (Strings for inputs to handle React state properly)
     const [formData, setFormData] = useState({
-        serviceName: '',
-        category: 'Cleaning',
+        servicename: '',
         price: '',
         description: '',
-        isActive: true
+        availability: 'true' // Controls the dropdown (string value)
     });
-
-    // --- API Interactions ---
-    const fetchServices = async () => {
-        setLoading(true);
-        try {
-            const response = await api.get('/service-provider/services/');
-            setServices(response.data);
-        } catch (error) {
-            console.error("Error fetching services:", error);
-        } finally {
-            setLoading(false);
-        }
-    };
 
     useEffect(() => {
         fetchServices();
     }, []);
 
-    const handleSaveService = async (e) => {
-        e.preventDefault();
+    const fetchServices = async () => {
         try {
-            if (isEditing) {
-                await api.put(`/service-provider/services/${currentServiceId}/`, formData);
+            const response = await api.get('/provider/services/');
+            // Safety check: Ensure we map over an array
+            if (Array.isArray(response.data)) {
+                setServices(response.data);
             } else {
-                await api.post('/service-provider/services/', formData);
+                setServices([]); 
             }
-            setShowModal(false);
-            fetchServices();
+            setLoading(false);
         } catch (error) {
-            console.error("Error saving service:", error);
-            alert("Operation failed. Check console.");
+            console.error("Error fetching services", error);
+            setErrorMsg("Failed to load services.");
+            setLoading(false);
         }
+    };
+
+    const handleLogout = () => {
+        localStorage.removeItem('access');
+        localStorage.removeItem('refresh');
+        navigate('/login');
+    };
+
+    // --- Helper for Availability Badge ---
+    const getAvailabilityBadge = (avail) => {
+        // Handle various true/false formats safely
+        // Database might return boolean true/false, or string "true"/"false", or 1/0
+        const isTrue = avail === true || String(avail).toLowerCase() === 'true' || avail === 1;
+        
+        if (isTrue) {
+            return (
+                <Badge bg="success" className="d-inline-flex align-items-center gap-1">
+                    <CheckCircle size={12} /> Available
+                </Badge>
+            );
+        } else {
+            return (
+                <Badge bg="danger" className="d-inline-flex align-items-center gap-1">
+                    <XCircle size={12} /> Unavailable
+                </Badge>
+            );
+        }
+    };
+
+    // --- Modal Handlers ---
+    const handleAddNew = () => {
+        setFormData({ servicename: '', price: '', description: '', availability: 'true' });
+        setIsEditing(false);
+        setCurrentServiceId(null);
+        setShowModal(true);
+        setErrorMsg('');
+    };
+
+    const handleEdit = (service) => {
+        setFormData({
+            servicename: service.servicename,
+            price: service.price,
+            description: service.description,
+            // Convert database value to string for dropdown
+            availability: (service.availability === true || String(service.availability) === 'true') ? 'true' : 'false'
+        });
+        setCurrentServiceId(service.serviceid);
+        setIsEditing(true);
+        setShowModal(true);
+        setErrorMsg('');
     };
 
     const handleDelete = async (id) => {
-        if (window.confirm("Delete this service permanently?")) {
-            try {
-                await api.delete(`/service-provider/services/${id}/`);
-                fetchServices();
-            } catch (error) {
-                console.error("Error deleting service:", error);
-            }
-        }
-    };
+        if (!window.confirm("Are you sure you want to delete this service?")) return;
 
-    const handleToggleStatus = async (service) => {
         try {
-            await api.patch(`/service-provider/services/${service.id}/`, {
-                isActive: !service.isActive
-            });
-            fetchServices();
+            await api.delete(`/provider/services/${id}/`);
+            setServices(services.filter(s => s.serviceid !== id));
         } catch (error) {
-            console.error("Error updating status:", error);
+            console.error("Error deleting service", error);
+            alert("Failed to delete service.");
         }
     };
 
-    // --- Modal Helpers ---
-    const openAddModal = () => {
-        setFormData({ serviceName: '', category: 'Cleaning', price: '', description: '', isActive: true });
-        setIsEditing(false);
-        setShowModal(true);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setModalLoading(true);
+        setErrorMsg('');
+
+        // 1. Construct Payload Explicitly
+        // This ensures 'availability' is a real Boolean, not a string
+        const payload = {
+            servicename: formData.servicename,
+            price: formData.price,
+            description: formData.description,
+            availability: formData.availability === 'true' // Converts string "true" -> true
+        };
+
+        try {
+            if (isEditing) {
+                // UPDATE (PUT)
+                const response = await api.put(`/provider/services/${currentServiceId}/`, payload);
+                setServices(services.map(s => s.serviceid === currentServiceId ? response.data : s));
+            } else {
+                // CREATE (POST)
+                const response = await api.post('/provider/services/', payload);
+                setServices([...services, response.data]);
+            }
+            setShowModal(false);
+        } catch (error) {
+            console.error("Error saving service", error);
+            // Display specific backend error if available
+            const backendData = error.response?.data;
+            let displayError = "Failed to save service.";
+            
+            if (backendData) {
+                // Check for generic error or field errors
+                if (backendData.error) {
+                    displayError = backendData.error;
+                } else {
+                    // Format Django field errors (e.g. {price: ["A number is required"]})
+                    displayError = Object.entries(backendData)
+                        .map(([key, val]) => `${key}: ${val}`)
+                        .join(', ');
+                }
+            }
+            setErrorMsg(displayError);
+        } finally {
+            setModalLoading(false);
+        }
     };
 
-    const openEditModal = (service) => {
-        setFormData({
-            serviceName: service.serviceName,
-            category: service.category,
-            price: service.price,
-            description: service.description,
-            isActive: service.isActive
-        });
-        setCurrentServiceId(service.id);
-        setIsEditing(true);
-        setShowModal(true);
-    };
+    if (loading) return (
+        <div className="d-flex justify-content-center align-items-center vh-100">
+            <Spinner animation="border" variant="primary" />
+        </div>
+    );
 
     return (
         <div className="dashboard-root">
-            <Sidebar />
-            
-            <main className="dashboard-content">
-                <Container fluid className="px-0">
-                    {/* Page Header */}
-                    <div className="d-flex justify-content-between align-items-center mb-4">
+            <Sidebar handleLogout={handleLogout} />
+
+            <main className="main-content">
+                <Container fluid>
+                    <div className="d-flex justify-content-between align-items-center mb-4 header-welcome">
                         <div>
-                            <h2 className="page-title">Manage Services</h2>
-                            <p className="text-muted mb-0">Overview of your service catalog</p>
+                            <h1>My Services</h1>
+                            <p>Create and manage the services residents can book.</p>
                         </div>
-                        <Button className="btn-primary-custom" onClick={openAddModal}>
-                            <Plus size={18} className="me-2" />
-                            Add Service
+                        <Button 
+                            className="d-flex align-items-center gap-2 btn-primary-custom"
+                            onClick={handleAddNew}
+                        >
+                            <Plus size={18} /> Add New Service
                         </Button>
                     </div>
 
-                    {/* Stats Row */}
-                    <Row className="mb-4">
-                        <Col md={3}>
-                            <div className="stat-card">
-                                <span className="stat-label">Total Services</span>
-                                <h3 className="stat-value">{services.length}</h3>
-                            </div>
-                        </Col>
-                        <Col md={3}>
-                            <div className="stat-card">
-                                <span className="stat-label">Active</span>
-                                <h3 className="stat-value text-success">
-                                    {services.filter(s => s.isActive).length}
-                                </h3>
-                            </div>
-                        </Col>
-                    </Row>
+                    {errorMsg && <Alert variant="danger" dismissible onClose={() => setErrorMsg('')}>{errorMsg}</Alert>}
 
-                    {/* Main Content Box (White Background) */}
-                    <Card className="service-content-card">
+                    <Card className="border-0 shadow-sm table-card">
                         <Card.Body className="p-0">
-                            {/* Toolbar inside the White Box */}
-                            <div className="table-toolbar">
-                                <div className="search-box">
-                                    <Search size={18} className="text-muted" />
-                                    <input type="text" placeholder="Search services..." />
-                                </div>
-                                <Button variant="outline-secondary" size="sm" className="btn-filter">
-                                    <Filter size={16} className="me-2" /> Filter
-                                </Button>
-                            </div>
-
-                            {/* Table */}
-                            {loading ? (
-                                <div className="text-center py-5">
-                                    <Spinner animation="border" variant="primary" />
-                                </div>
-                            ) : (
-                                <Table hover responsive className="mb-0 custom-table">
-                                    <thead className="bg-light">
-                                        <tr>
-                                            <th>Service Name</th>
-                                            <th>Category</th>
-                                            <th>Price</th>
-                                            <th>Description</th>
-                                            <th>Status</th>
-                                            <th className="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {services.length > 0 ? (
-                                            services.map((service) => (
-                                                <tr key={service.id}>
-                                                    <td className="fw-semibold text-dark">{service.serviceName}</td>
-                                                    <td>
-                                                        <span className="category-badge">{service.category}</span>
-                                                    </td>
-                                                    <td className="fw-bold text-dark">${Number(service.price).toFixed(2)}</td>
-                                                    <td className="text-muted text-truncate" style={{maxWidth: '250px'}}>
-                                                        {service.description}
-                                                    </td>
-                                                    <td>
-                                                        <div className="form-check form-switch">
-                                                            <input 
-                                                                className="form-check-input" 
-                                                                type="checkbox" 
-                                                                checked={service.isActive}
-                                                                onChange={() => handleToggleStatus(service)}
-                                                            />
-                                                            <label className="form-check-label small ms-2 text-muted">
-                                                                {service.isActive ? 'Active' : 'Hidden'}
-                                                            </label>
-                                                        </div>
-                                                    </td>
-                                                    <td className="text-end">
-                                                        <Button variant="link" className="action-btn text-primary" onClick={() => openEditModal(service)}>
-                                                            <Edit2 size={18} />
+                            <Table hover responsive className="custom-table align-middle mb-0">
+                                <thead className="bg-light">
+                                    <tr>
+                                        <th style={{width: '25%'}}>Service Name</th>
+                                        <th style={{width: '35%'}}>Description</th>
+                                        <th style={{width: '15%'}}>Price</th>
+                                        <th style={{width: '15%'}}>Status</th>
+                                        <th className="text-end" style={{width: '10%'}}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {services && services.length > 0 ? (
+                                        services.map((service) => (
+                                            <tr key={service.serviceid}>
+                                                <td className="fw-bold text-primary">
+                                                    <div className="d-flex align-items-center gap-2">
+                                                        <ServiceIcon size={16} className="text-muted" />
+                                                        {service.servicename}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <span className="text-muted small d-inline-block text-truncate" style={{maxWidth: '250px'}}>
+                                                        {service.description || "No description provided."}
+                                                    </span>
+                                                </td>
+                                                <td className="fw-bold">${service.price}</td>
+                                                <td>
+                                                    {getAvailabilityBadge(service.availability)}
+                                                </td>
+                                                <td className="text-end">
+                                                    {/* Flex Container for Buttons to fix alignment */}
+                                                    <div className="d-flex gap-2 justify-content-end">
+                                                        <Button 
+                                                            variant="outline-primary" 
+                                                            size="sm" 
+                                                            onClick={() => handleEdit(service)}
+                                                            title="Edit"
+                                                            style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        >
+                                                            <Edit2 size={14} />
                                                         </Button>
-                                                        <Button variant="link" className="action-btn text-danger" onClick={() => handleDelete(service.id)}>
-                                                            <Trash2 size={18} />
+                                                        <Button 
+                                                            variant="outline-danger" 
+                                                            size="sm" 
+                                                            onClick={() => handleDelete(service.serviceid)}
+                                                            title="Delete"
+                                                            style={{ width: '32px', height: '32px', padding: '0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        >
+                                                            <Trash2 size={14} />
                                                         </Button>
-                                                    </td>
-                                                </tr>
-                                            ))
-                                        ) : (
-                                            <tr>
-                                                <td colSpan="6" className="text-center py-5 text-muted">
-                                                    No services found. Add one to get started!
+                                                    </div>
                                                 </td>
                                             </tr>
-                                        )}
-                                    </tbody>
-                                </Table>
-                            )}
+                                        ))
+                                    ) : (
+                                        <tr>
+                                            <td colSpan="5" className="text-center py-5">
+                                                <div className="empty-state">
+                                                    <div className="mb-3 text-muted opacity-50" style={{fontSize: '2rem'}}>📋</div>
+                                                    <h5 className="text-muted">No Services Added</h5>
+                                                    <p className="text-muted small">
+                                                        Click "Add New Service" to get started.
+                                                    </p>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </tbody>
+                            </Table>
                         </Card.Body>
                     </Card>
-                </Container>
-            </main>
 
-            {/* Modal remains the same */}
-            <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-                <Modal.Header closeButton>
-                    <Modal.Title>{isEditing ? 'Edit Service' : 'Add New Service'}</Modal.Title>
-                </Modal.Header>
-                <Form onSubmit={handleSaveService}>
-                    <Modal.Body>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Service Name</Form.Label>
-                            <Form.Control 
-                                type="text" 
-                                value={formData.serviceName}
-                                onChange={(e) => setFormData({...formData, serviceName: e.target.value})}
-                                required
-                            />
-                        </Form.Group>
-                        <Row>
-                            <Col md={6}>
+                    {/* Add/Edit Modal */}
+                    <Modal show={showModal} onHide={() => setShowModal(false)} centered backdrop="static">
+                        <Modal.Header closeButton>
+                            <Modal.Title>{isEditing ? 'Edit Service' : 'Add New Service'}</Modal.Title>
+                        </Modal.Header>
+                        <Form onSubmit={handleSubmit}>
+                            <Modal.Body>
                                 <Form.Group className="mb-3">
-                                    <Form.Label>Category</Form.Label>
-                                    <Form.Select 
-                                        value={formData.category}
-                                        onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                    >
-                                        <option value="Cleaning">Cleaning</option>
-                                        <option value="Plumbing">Plumbing</option>
-                                        <option value="Electrical">Electrical</option>
-                                        <option value="Appliance">Appliance</option>
-                                        <option value="General">General Help</option>
-                                    </Form.Select>
-                                </Form.Group>
-                            </Col>
-                            <Col md={6}>
-                                <Form.Group className="mb-3">
-                                    <Form.Label>Price ($)</Form.Label>
+                                    <Form.Label className="small fw-bold">Service Name</Form.Label>
                                     <Form.Control 
-                                        type="number" 
-                                        value={formData.price}
-                                        onChange={(e) => setFormData({...formData, price: e.target.value})}
+                                        type="text" 
+                                        value={formData.servicename}
+                                        onChange={(e) => setFormData({...formData, servicename: e.target.value})}
                                         required
+                                        placeholder="e.g., Plumbing Repair"
                                     />
                                 </Form.Group>
-                            </Col>
-                        </Row>
-                        <Form.Group className="mb-3">
-                            <Form.Label>Description</Form.Label>
-                            <Form.Control 
-                                as="textarea" 
-                                rows={3} 
-                                value={formData.description}
-                                onChange={(e) => setFormData({...formData, description: e.target.value})}
-                            />
-                        </Form.Group>
-                    </Modal.Body>
-                    <Modal.Footer>
-                        <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-                        <Button type="submit" className="btn-primary-custom">
-                            {isEditing ? 'Update Service' : 'Create Service'}
-                        </Button>
-                    </Modal.Footer>
-                </Form>
-            </Modal>
+                                <Row>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label className="small fw-bold">Price ($)</Form.Label>
+                                            <Form.Control 
+                                                type="number" 
+                                                step="0.01"
+                                                value={formData.price}
+                                                onChange={(e) => setFormData({...formData, price: e.target.value})}
+                                                required
+                                                placeholder="0.00"
+                                            />
+                                        </Form.Group>
+                                    </Col>
+                                    <Col md={6}>
+                                        <Form.Group className="mb-3">
+                                            <Form.Label className="small fw-bold">Status</Form.Label>
+                                            <Form.Select 
+                                                value={formData.availability}
+                                                onChange={(e) => setFormData({...formData, availability: e.target.value})}
+                                            >
+                                                <option value="true">Available</option>
+                                                <option value="false">Unavailable</option>
+                                            </Form.Select>
+                                        </Form.Group>
+                                    </Col>
+                                </Row>
+                                <Form.Group className="mb-3">
+                                    <Form.Label className="small fw-bold">Description</Form.Label>
+                                    <Form.Control 
+                                        as="textarea" 
+                                        rows={3} 
+                                        value={formData.description}
+                                        onChange={(e) => setFormData({...formData, description: e.target.value})}
+                                        placeholder="Describe what this service includes..."
+                                    />
+                                </Form.Group>
+                            </Modal.Body>
+                            <Modal.Footer>
+                                <Button variant="secondary" onClick={() => setShowModal(false)} disabled={modalLoading}>
+                                    Cancel
+                                </Button>
+                                <Button type="submit" variant="primary" disabled={modalLoading}>
+                                    {modalLoading ? <Spinner size="sm" animation="border" /> : (isEditing ? 'Update Service' : 'Create Service')}
+                                </Button>
+                            </Modal.Footer>
+                        </Form>
+                    </Modal>
+                </Container>
+            </main>
         </div>
     );
 };

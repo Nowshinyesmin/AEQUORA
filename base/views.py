@@ -1073,36 +1073,68 @@ class AuthorityDashboardStatsView(APIView):
                 target_community = user_email.userid.communityid
 
             if not target_community:
-                return Response({"total_issues": 0, "resolved_issues": 0, "pending_issues": 0, "satisfaction_rate": 0})
+                return Response({
+                    "total_issues": 0, 
+                    "resolved_issues": 0, 
+                    "pending_issues": 0, 
+                    "satisfaction_rate": 0,
+                    "avg_resolution_time": "0 hrs"
+                })
 
             # 2. Filter Stats by Community
             total_issues = Issuereport.objects.filter(communityid=target_community).count()
             
-            resolved_issues = Issuereport.objects.filter(
+            resolved_issues_qs = Issuereport.objects.filter(
                 communityid=target_community,
                 status='Resolved'
-            ).count()
+            )
+            resolved_issues = resolved_issues_qs.count()
             
             pending_issues = Issuereport.objects.filter(communityid=target_community).exclude(
                 status='Resolved'
             ).count()
+
+            # --- Calculate Average Resolution Time ---
+            total_seconds = 0
+            count = 0
+            # Only consider resolved issues that have a timestamp for resolution
+            for i in resolved_issues_qs.filter(resolvedat__isnull=False):
+                if i.createdat and i.resolvedat:
+                    diff = i.resolvedat - i.createdat
+                    total_seconds += diff.total_seconds()
+                    count += 1
+
+            avg_time_str = "0 hrs"
+            if count > 0:
+                avg_seconds = total_seconds / count
+                hours = int(avg_seconds // 3600)
+                avg_time_str = f"{hours} hrs"
+            # -----------------------------------------
 
             # Avg rating of bookings in THIS community
             avg_rating = Review.objects.filter(
                 bookingid__communityid=target_community
             ).aggregate(Avg('rating'))['rating__avg'] or 0
             
-            satisfaction_rate = round((avg_rating / 5) * 100, 1)
+            satisfaction_rate = round(avg_rating, 1)
 
             return Response({
                 "total_issues": total_issues,
                 "resolved_issues": resolved_issues,
                 "pending_issues": pending_issues,
-                "satisfaction_rate": satisfaction_rate
+                "satisfaction_rate": satisfaction_rate,
+                "avg_resolution_time": avg_time_str
             })
 
-        except Exception:
-             return Response({"total_issues": 0, "resolved_issues": 0, "pending_issues": 0, "satisfaction_rate": 0})
+        except Exception as e:
+             # Just in case of error
+             return Response({
+                 "total_issues": 0, 
+                 "resolved_issues": 0, 
+                 "pending_issues": 0, 
+                 "satisfaction_rate": 0,
+                 "avg_resolution_time": "0 hrs"
+             })
 
 
 class AuthorityIssueListView(generics.ListAPIView):

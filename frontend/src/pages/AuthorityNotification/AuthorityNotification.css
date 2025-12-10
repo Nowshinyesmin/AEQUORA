@@ -1,0 +1,189 @@
+/* frontend/src/pages/AuthorityNotification/AuthorityNotification.css */
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: #f9fafb;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Sidebar Styling matching Authority Dashboard */
+.dashboard-sidebar {
+  width: 260px;
+  background-color: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  z-index: 1000;
+}
+.sidebar-brand { padding: 2rem 1rem; font-size: 1.8rem; font-weight: 900; color: #111827; text-align: center; letter-spacing: 1px; text-transform: uppercase; }
+.user-profile-section { padding: 0 1.5rem 1.5rem 1.5rem; border-bottom: 1px solid #f3f4f6; display: flex; flex-direction: column; gap: 2px; }
+.user-name-display { font-weight: 700; font-size: 0.95rem; color: #111827; }
+.user-role-display { font-size: 0.8rem; color: #2563eb; font-weight: 600; text-transform: uppercase; }
+.sidebar-nav { padding: 1.5rem 1rem; flex-grow: 1; display: flex; flex-direction: column; gap: 0.5rem; }
+.nav-link-custom { display: flex; align-items: center; padding: 0.75rem 1rem; color: #4b5563; text-decoration: none; border-radius: 8px; font-weight: 500; font-size: 0.95rem; transition: all 0.2s; cursor: pointer; border: none; background: transparent; width: 100%; text-align: left;}
+.nav-link-custom:hover { background-color: #f9fafb; color: #111827; }
+.nav-icon { margin-right: 0.75rem; min-width: 20px; }
+.text-danger { color: #dc2626; }
+.sidebar-footer { padding: 1.5rem; border-top: 1px solid #f3f4f6; background-color: #ffffff; margin-top: auto; }
+.logout-btn { width: 100%; display: flex; align-items: center; padding: 0.75rem 1rem; background-color: #ffffff; color: #374151; border: 1px solid #e5e7eb; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; }
+.logout-btn:hover { background-color: #f9fafb; border-color: #d1d5db; color: #111827; }
+
+
+/* Main Content Area */
+.main-content {
+  margin-left: 260px;
+  padding: 2.5rem;
+  width: calc(100% - 260px);
+  flex-grow: 1;
+  position: relative; /* Required for absolute positioning of header actions */
+}
+
+/* Header */
+.page-header {
+  margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.page-title h1 {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0;
+}
+.page-subtitle {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+/* --- ACTION BUTTONS (Top Right) --- */
+.header-right-actions {
+  position: absolute;
+  top: 2.5rem;
+  right: 2.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 10;
+}
+
+.mark-read-btn {
+  background-color: #ffffff;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+.mark-read-btn:hover {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+.notification-wrapper {
+  position: relative;
+  cursor: pointer;
+  color: #4b5563;
+  transition: color 0.2s;
+  display: flex;
+  align-items: center;
+}
+.notification-wrapper:hover { color: #111827; }
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background-color: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #ffffff;
+}
+
+/* --- Notification List --- */
+.notification-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 900px;
+  margin-top: 1rem;
+}
+
+.notification-card {
+  display: flex;
+  align-items: center;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: 1rem 1.25rem;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+.notification-card:hover { background-color: #f9fafb; border-color: #d1d5db; }
+
+/* Read vs Unread States */
+.notification-card.unread {
+  background-color: #f0f9ff;
+  border-color: #bae6fd;
+}
+.notification-card.read {
+  opacity: 0.9;
+  background-color: #ffffff;
+}
+
+/* Card Internals */
+.notif-icon-box {
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 30px;
+}
+.notif-content { flex-grow: 1; }
+.notif-message {
+  margin: 0;
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+.notif-time {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+  display: block;
+}
+.unread-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #0284c7;
+  border-radius: 50%;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.empty-state-card {
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #6b7280;
+  font-weight: 500;
+}

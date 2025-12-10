@@ -98,12 +98,10 @@ class IssueReportSerializer(serializers.ModelSerializer):
         model = Issuereport
         fields = ['issueid', 'title', 'type', 'description', 'mapaddress', 'prioritylevel', 'status', 'createdat']
 
-# --- Find EventSerializer and REPLACE it with this: ---
 class EventSerializer(serializers.ModelSerializer):
     posted_by_name = serializers.SerializerMethodField()
     class Meta:
         model = Event
-        # Added communityid, status, createdat so frontend can filter/sort
         fields = ['eventid', 'communityid', 'title', 'description', 'date', 'time', 'location', 'category', 'status', 'createdat', 'posted_by_name']
     
     def get_posted_by_name(self, obj):
@@ -205,26 +203,19 @@ class ChangePasswordSerializer(serializers.Serializer):
     new_password = serializers.CharField(required=True)
 
 
-#sAYEDA NUSRAT
-
 class AuthorityProfileSerializer(serializers.ModelSerializer):
     firstname = serializers.CharField(source='userid.firstname')
     lastname = serializers.CharField(source='userid.lastname')
     email = serializers.SerializerMethodField()
     
-    # --- ADD THIS FIELD ---
-    # This maps the serializer field 'communityid' to the User model's 'communityid' field
     communityid = serializers.PrimaryKeyRelatedField(
         queryset=Community.objects.all(), 
         source='userid.communityid', 
         required=False, 
         allow_null=True
     )
-    # ----------------------
 
-    # ... keep existing authority specific fields ...
     departmentname = serializers.CharField(required=False, allow_blank=True, allow_null=True)
-    # ... (designation, assignedarea, houseno, street, thana, district) ...
 
     class Meta:
         model = Authority
@@ -232,38 +223,34 @@ class AuthorityProfileSerializer(serializers.ModelSerializer):
             'authorityid', 'firstname', 'lastname', 'email', 
             'departmentname', 'designation', 'assignedarea',
             'houseno', 'street', 'thana', 'district',
-            'communityid' # <--- ADD THIS to the fields list
+            'communityid'
         ]
 
-    # ... keep existing get_email method ...
+    def get_email(self, obj):
+        user_email_obj = obj.userid.useremail_set.first()
+        return user_email_obj.email if user_email_obj else None
 
     def update(self, instance, validated_data):
-        # Update User model fields
         user_data = validated_data.pop('userid', {})
         if user_data:
             user = instance.userid
             user.firstname = user_data.get('firstname', user.firstname)
             user.lastname = user_data.get('lastname', user.lastname)
-            
-            # --- ADD THIS BLOCK ---
-            # Check if communityid is present in the nested user data and update it
             if 'communityid' in user_data:
                 user.communityid = user_data['communityid']
-            # ----------------------
-            
             user.save()
 
-        # ... keep existing Authority model fields update logic ...
         instance.departmentname = validated_data.get('departmentname', instance.departmentname)
-        # ... (rest of your existing fields)
+        instance.designation = validated_data.get('designation', instance.designation)
+        instance.assignedarea = validated_data.get('assignedarea', instance.assignedarea)
+        instance.houseno = validated_data.get('houseno', instance.houseno)
+        instance.street = validated_data.get('street', instance.street)
+        instance.thana = validated_data.get('thana', instance.thana)
+        instance.district = validated_data.get('district', instance.district)
         
         instance.save()
         return instance
 
-
-# ==========================================
-#  SERVICE PROVIDER SERIALIZERS
-# ==========================================
 
 class ProviderServiceSerializer(serializers.ModelSerializer):
     class Meta:
@@ -271,7 +258,6 @@ class ProviderServiceSerializer(serializers.ModelSerializer):
         fields = ['serviceid', 'servicename', 'description', 'price', 'availability']
 
 
-# --- Find ProviderBookingSerializer and REPLACE it with this: ---
 class ProviderBookingSerializer(serializers.ModelSerializer):
     resident_name = serializers.CharField(source='residentid.userid.firstname', read_only=True)
     resident_lastname = serializers.CharField(source='residentid.userid.lastname', read_only=True)
@@ -280,25 +266,21 @@ class ProviderBookingSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Booking
-        # ADDED 'paymentstatus' here
         fields = ['bookingid', 'resident_name', 'resident_lastname', 'resident_address', 'service_name', 'bookingdate', 'status', 'paymentstatus', 'price']
 
     def get_resident_address(self, obj):
         res = obj.residentid
-        # Safe access to address fields
         h_no = getattr(res, 'house_no', getattr(res, 'houseno', ''))
         parts = [h_no, res.street, res.thana, res.district]
         return ", ".join([p for p in parts if p]) if res else "N/A"
 
 class ProviderProfileSerializer(serializers.ModelSerializer):
-    # --- User Model Fields ---
     first_name = serializers.CharField(source='userid.firstname')
     last_name = serializers.CharField(source='userid.lastname')
-    email = serializers.EmailField(source='userid.email', read_only=True) # Read-only for safety
+    email = serializers.EmailField(source='userid.email', read_only=True)
     date_of_birth = serializers.DateField(source='userid.date_of_birth', required=False, allow_null=True)
     gender = serializers.CharField(source='userid.gender', required=False, allow_blank=True)
     
-    # Community ID (Handling ForeignKey)
     community_id = serializers.PrimaryKeyRelatedField(
         source='userid.communityid', 
         queryset=Community.objects.all(),
@@ -306,10 +288,7 @@ class ProviderProfileSerializer(serializers.ModelSerializer):
         allow_null=True
     )
     
-    # --- Phone Number (Separate Table) ---
     phone_number = serializers.SerializerMethodField()
-
-    # --- Computed Rating ---
     rating = serializers.SerializerMethodField()
 
     class Meta:
@@ -337,20 +316,16 @@ class ProviderReviewSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Review
-        # IMPORTANT: Ensure these field names match your Review model columns
-        # If your model uses 'reviewID' or 'createdAt', change them here.
         fields = ['reviewid', 'client_name', 'service_name', 'rating', 'description', 'createdat']
 
     def get_client_name(self, obj):
         try:
-            # Safely navigate: Review -> Resident -> User -> Firstname
             return f"{obj.residentid.userid.firstname} {obj.residentid.userid.lastname}"
         except:
             return "Resident"
 
     def get_service_name(self, obj):
         try:
-            # Try getting service from direct link or booking link
             if hasattr(obj, 'serviceid') and obj.serviceid:
                 return obj.serviceid.servicename
             if hasattr(obj, 'bookingid') and obj.bookingid:

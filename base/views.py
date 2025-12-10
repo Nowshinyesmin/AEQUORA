@@ -1866,3 +1866,77 @@ class AuthorityProfileView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+# FOR AUTHORITY NOTIFICATION BY SAYEDA NUSRAT
+
+class AuthoritySOSDetailView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def patch(self, request, pk):
+        try:
+            sos = Emergencyreport.objects.get(pk=pk)
+            sos.status = request.data.get('status', sos.status)
+            sos.save()
+            return Response({'status': 'success'})
+        except Emergencyreport.DoesNotExist:
+            return Response({'error': 'Not found'}, status=404)
+
+    def post(self, request, pk):
+        """
+        Handles Dispatch Logic.
+        1. Identifies the Service Type (Police, Fire, Ambulance).
+        2. Finds Authorities in the same Community with matching Department names.
+        3. Sends a notification specifically to them.
+        """
+        service_type = request.data.get('service', '').upper() # e.g., 'FIRE DEPT', 'AMBULANCE'
+        
+        try:
+            sos = Emergencyreport.objects.get(pk=pk)
+            community = sos.communityid
+            
+            # Map Service Type to Department Keywords
+            dept_keyword = ""
+            if "FIRE" in service_type:
+                dept_keyword = "Fire"
+            elif "AMBULANCE" in service_type or "MEDICAL" in service_type:
+                dept_keyword = "Medical" # or Health
+            elif "POLICE" in service_type:
+                dept_keyword = "Police" # or Security
+            
+            # Find relevant Authorities in this community
+            if dept_keyword:
+                target_authorities = Authority.objects.filter(
+                    userid__communityid=community,
+                    departmentname__icontains=dept_keyword
+                )
+                
+                # Create Notifications
+                notifs = []
+                for auth in target_authorities:
+                    notifs.append(Notification(
+                        userid=auth.userid,
+                        communityid=community,
+                        message=f"DISPATCH ALERT: You have been assigned to an SOS at {sos.location}.",
+                        type="sos",
+                        link="/authority/emergency" # <--- FIXED: Correct Link
+                    ))
+                
+                if notifs:
+                    Notification.objects.bulk_create(notifs)
+                    print(f"--- DEBUG: Notified {len(notifs)} authorities in {dept_keyword} department ---")
+
+            return Response({'message': f'{service_type} Units Dispatched Successfully'})
+            
+        except Emergencyreport.DoesNotExist:
+            return Response({'error': 'SOS Report not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
+
+# ----------------------------------------------------------------------
+#  END CORRECTED CLASS
+# ----------------------------------------------------------------------
+
+# ... (Keep the rest of your views: VotingResultsView, AuthorityEventView, AuthorityEventRequestsView, etc.) ...
+# ... (Keep NotificationView, Provider Views, Payment Views) ...

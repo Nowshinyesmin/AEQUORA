@@ -1,5 +1,10 @@
 from django.urls import path
 import base.signals
+
+# ADDED BY SAYEDA NUSRAT FOR THE EVIDENCE PHOTO 
+
+from django.conf import settings
+from django.conf.urls.static import static
 from .views import (
     # --- Admin (hard-coded admin panel) ---
     AdminProfileView,
@@ -51,7 +56,7 @@ from .views import (
     AuthorityEventRequestsView,
     AuthorityEventActionView,
     AuthorityProfileView,
-
+   
     # --- Service Provider Views ---
     ProviderDashboardStatsView,
     ProviderServiceManageView,
@@ -99,9 +104,9 @@ urlpatterns = [
     path('resident/community-issues/', CommunityIssueListView.as_view(), name='community_issues'),
     path('resident/vote/', IssueVoteView.as_view(), name='cast_vote'),
 
-    # Notifications
+    # Notifications (Resident)
     path('resident/notifications/', NotificationView.as_view(), name='notifications'),
-
+   
     # ==========================
     # BKASH PAYMENT INTEGRATION
     # ==========================
@@ -131,9 +136,13 @@ urlpatterns = [
     path('authority/events/requests/', AuthorityEventRequestsView.as_view(), name='auth_event_requests'),
     path('authority/events/<int:pk>/action/', AuthorityEventActionView.as_view(), name='auth_event_action'),
     path('authority/events/<int:pk>/', AuthorityEventActionView.as_view(), name='auth_event_delete'),
-    path('authority/voting-results/', VotingResultsView.as_view(), name='voting_results'),
+    
     # Authority Profile
     path('authority/profile/', AuthorityProfileView.as_view(), name='authority_profile'),
+
+    # --- AUTHORITY NOTIFICATIONS (New Endpoint) ---
+    # We reuse NotificationView because the logic (fetch by request.user) is the same
+    path('authority/notifications/', NotificationView.as_view(), name='auth_notifications'),
 
 
     # ==========================
@@ -162,4 +171,10 @@ urlpatterns = [
         name="admin-user-toggle-status",
     ),
     path("admin/dashboard-stats/", AdminDashboardStatsView.as_view(), name="admin-dashboard-stats"),
+
 ]
+# ... existing urlpatterns list ...
+
+# ADD THIS BLOCK AT THE END
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

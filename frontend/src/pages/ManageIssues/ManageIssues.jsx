@@ -9,10 +9,13 @@ import {
   Calendar, 
   Vote, 
   LogOut,
-  User // <--- Added User icon
+  User,
+  Bell // <--- Added Bell icon
 } from 'lucide-react';
 import { api } from "../../api/client"; 
 import './ManageIssues.css';
+// Ensure Dashboard CSS is imported for the bell styling consistency
+import "../AuthorityDashboard/AuthorityDashboard.css"; 
 
 const ManageIssues = () => {
   const navigate = useNavigate();
@@ -21,7 +24,7 @@ const ManageIssues = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // NEW: State to hold the dynamic list of departments from the database
+  // State to hold the dynamic list of departments
   const [departments, setDepartments] = useState(['Unassigned']); 
 
   const [userInfo, setUserInfo] = useState({
@@ -31,6 +34,9 @@ const ManageIssues = () => {
     role: 'Authority'
   });
 
+  // NEW: Notification Count State
+  const [notifCount, setNotifCount] = useState(0);
+
   // Filter States
   const [filters, setFilters] = useState({
     category: 'All',
@@ -38,7 +44,7 @@ const ManageIssues = () => {
     urgency: 'All'
   });
 
-  // --- 1. Fetch User Data (FIXED VARIABLE NAMES) ---
+  // --- 1. Fetch User Data ---
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -49,9 +55,7 @@ const ManageIssues = () => {
         }
         const response = await api.get('auth/users/me/');
         setUserInfo({
-          // FIXED: Backend uses 'firstname', not 'first_name'
           firstName: response.data.firstname || '',
-          // FIXED: Backend uses 'lastname', not 'last_name'
           lastName: response.data.lastname || '',
           username: response.data.username || '',
           role: response.data.role || 'Authority'
@@ -63,17 +67,19 @@ const ManageIssues = () => {
     fetchUserData();
   }, [navigate]);
 
-  // --- 2. Fetch Issues AND Departments ---
+  // --- 2. Fetch Issues, Departments AND Notifications ---
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [issuesRes, deptRes] = await Promise.all([
+        const [issuesRes, deptRes, notifRes] = await Promise.all([
             api.get('issues/'),              
-            api.get('authority/departments/') 
+            api.get('authority/departments/'),
+            api.get('authority/notifications/') // Added Notification Fetch
         ]);
 
         setIssues(issuesRes.data);
         setDepartments(['Unassigned', ...deptRes.data]);
+        setNotifCount(notifRes.data.unread_count); // Set count
 
       } catch (err) {
         console.error("Backend connection failed:", err);
@@ -231,8 +237,16 @@ const ManageIssues = () => {
       </aside>
 
       {/* --- MAIN CONTENT --- */}
-      <main className="manage-main">
+      <main className="manage-main" style={{ position: 'relative' }}>
         
+        {/* --- ADDED HEADER RIGHT ACTIONS (Notification Bell) --- */}
+        <div className="header-right-actions">
+           <div className="notification-wrapper" onClick={() => navigate('/authority/notifications')}>
+             <Bell size={24} />
+             {notifCount > 0 && <span className="notification-badge">{notifCount}</span>}
+           </div>
+        </div>
+
         <div style={{ marginBottom: '2rem', display: 'block' }}>
           <h1 className="page-title" style={{ marginBottom: '0.5rem' }}>Manage Issues</h1>
           <p className="page-subtitle" style={{ margin: 0 }}>Track, assign, and resolve community reports.</p>

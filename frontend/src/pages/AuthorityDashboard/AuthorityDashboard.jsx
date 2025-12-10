@@ -1,270 +1,99 @@
 // frontend/src/pages/AuthorityDashboard/AuthorityDashboard.jsx
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
-  LayoutDashboard,
-  ClipboardList,
-  BarChart2,
-  Siren,
-  Calendar,
-  Vote,
-  LogOut,
-  CheckCircle,
-  Clock,
-  AlertTriangle,
-  User // <--- Added User icon
+  LayoutDashboard, ClipboardList, BarChart2, Siren, Calendar, Vote, LogOut, CheckCircle, Clock, AlertTriangle, User, Bell
 } from 'lucide-react';
 import { Row, Col, Container, Card, ProgressBar } from 'react-bootstrap';
-
 import './AuthorityDashboard.css'; 
 import { api } from "../../api/client";
 
 function AuthorityDashboard() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
- 
-  // State for user data
-  const [userInfo, setUserInfo] = useState({
-    firstName: '',
-    lastName: '',
-    username: '',
-    role: 'Authority'
-  });
+  const [userInfo, setUserInfo] = useState({ firstName: '', lastName: '', role: 'Authority' });
+  const [stats, setStats] = useState({ total_issues: 0, resolved_issues: 0, pending_issues: 0, satisfaction_rate: 0 });
+  
+  // Notification State
+  const [notifCount, setNotifCount] = useState(0);
 
-  // State for Dashboard Stats
-  const [stats, setStats] = useState({
-    total_issues: 0,
-    resolved_issues: 0,
-    pending_issues: 0,
-    satisfaction_rate: 0
-  });
-
-  // 1. Fetch User Data (FIXED THE VARIABLE NAMES HERE)
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchData = async () => {
       try {
         const token = localStorage.getItem('token');
-        if (!token) {
-          navigate('/login');
-          return;
-        }
+        if (!token) { navigate('/login'); return; }
 
-        const response = await api.get('auth/users/me/');
-       
+        const [userRes, statsRes, notifRes] = await Promise.all([
+           api.get('auth/users/me/'),
+           api.get('authority/dashboard-stats/'),
+           api.get('authority/notifications/') // Fetch notification count
+        ]);
+
         setUserInfo({
-          // FIXED: Backend sends 'firstname' (lowercase), NOT 'first_name'
-          firstName: response.data.firstname || '', 
-          // FIXED: Backend sends 'lastname' (lowercase), NOT 'last_name'
-          lastName: response.data.lastname || '',
-          username: response.data.username || '',
-          role: response.data.role || 'Authority'
+          firstName: userRes.data.firstname || '', 
+          lastName: userRes.data.lastname || '',
+          role: userRes.data.role || 'Authority'
         });
-      } catch (error) {
-        console.error("Failed to fetch user profile", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+        setStats(statsRes.data);
+        setNotifCount(notifRes.data.unread_count);
 
-    fetchUserData();
+      } catch (error) { console.error(error); } finally { setLoading(false); }
+    };
+    fetchData();
   }, [navigate]);
 
-  // 2. Fetch Dashboard Statistics
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await api.get('authority/dashboard-stats/');
-        setStats(response.data);
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats", error);
-      }
-    };
-    
-    fetchStats();
-    const interval = setInterval(fetchStats, 30000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
-
-  const getDisplayName = () => {
-    const fullName = `${userInfo.firstName} ${userInfo.lastName}`.trim();
-    return fullName || userInfo.username || 'Authority User';
-  };
+  const handleLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
 
   return (
     <div className="dashboard-root">
-     
-      {/* --- Sidebar --- */}
       <aside className="dashboard-sidebar">
-        <div className="sidebar-brand">
-          Aequora
-        </div>
-
+        <div className="sidebar-brand">Aequora</div>
         <div className="user-profile-section">
-          <div className="user-name-display">
-             {loading ? 'Loading...' : getDisplayName()}
-          </div>
-          <div className="user-role-display">
-            {userInfo.role}
-          </div>
+          <div className="user-name-display">{userInfo.firstName} {userInfo.lastName}</div>
+          <div className="user-role-display">{userInfo.role}</div>
         </div>
-
         <nav className="sidebar-nav">
-          <Link to="/authority/dashboard" className="nav-link-custom active">
-            <LayoutDashboard size={20} className="nav-icon" />
-            Dashboard
-          </Link>
-         
-          <Link to="/authority/manage-issues" className="nav-link-custom">
-            <ClipboardList size={20} className="nav-icon" />
-            Manage Issues
-          </Link>
-         
-          <Link to="/authority/analytics" className="nav-link-custom">
-            <BarChart2 size={20} className="nav-icon" />
-            Analytics & Reports
-          </Link>
-         
-          <Link to="/authority/events" className="nav-link-custom">
-            <Calendar size={20} className="nav-icon" />
-            Events & Requests
-          </Link>
-         
-          <Link to="/authority/voting" className="nav-link-custom">
-            <Vote size={20} className="nav-icon" />
-            Community Voting
-          </Link>
-
-          <Link to="/authority/emergency" className="nav-link-custom text-danger">
-            <Siren size={20} className="nav-icon" />
-            Emergency SOS
-          </Link>
-
-          {/* --- Added Profile Link --- */}
-          <Link to="/authority/profile" className="nav-link-custom">
-            <User size={20} className="nav-icon" />
-            Profile
-          </Link>
+          <Link to="/authority/dashboard" className="nav-link-custom active"><LayoutDashboard size={20} className="nav-icon" />Dashboard</Link>
+          <Link to="/authority/manage-issues" className="nav-link-custom"><ClipboardList size={20} className="nav-icon" />Manage Issues</Link>
+          <Link to="/authority/analytics" className="nav-link-custom"><BarChart2 size={20} className="nav-icon" />Analytics & Reports</Link>
+          <Link to="/authority/events" className="nav-link-custom"><Calendar size={20} className="nav-icon" />Events & Requests</Link>
+          <Link to="/authority/voting" className="nav-link-custom"><Vote size={20} className="nav-icon" />Community Voting</Link>
+          <Link to="/authority/sos" className="nav-link-custom text-danger"><Siren size={20} className="nav-icon" />Emergency SOS</Link>
+          <Link to="/authority/profile" className="nav-link-custom"><User size={20} className="nav-icon" />Profile</Link>
         </nav>
-
         <div className="sidebar-footer">
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={18} className="me-2" />
-            Logout
-          </button>
+          <button onClick={handleLogout} className="logout-btn"><LogOut size={18} className="me-2" />Logout</button>
         </div>
       </aside>
 
-      {/* --- Main Content --- */}
       <main className="dashboard-main">
+        {/* BELL ICON IN HEADER */}
+        <div className="header-right-actions">
+           <div className="notification-wrapper" onClick={() => navigate('/authority/notifications')}>
+             <Bell size={24} />
+             {notifCount > 0 && <span className="notification-badge">{notifCount}</span>}
+           </div>
+        </div>
+
         <Container fluid className="p-0">
-         
           <div className="page-header-mb">
             <h1 className="page-title">Authority Dashboard</h1>
             <p className="page-subtitle">Manage reports, monitor data, and oversee community safety.</p>
           </div>
-
-          {/* 1. Statistics Cards */}
+          {/* Stats Cards */}
           <Row className="g-4 mb-4">
-            <Col md={4}>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <span className="stat-title">Total Issues Reported</span>
-                  <AlertTriangle size={22} className="text-warning" />
-                </div>
-                <div className="stat-value">{stats.total_issues}</div>
-                <small className="text-muted mt-2">All time reports</small>
-              </div>
-            </Col>
-
-            <Col md={4}>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <span className="stat-title">Issues Resolved</span>
-                  <CheckCircle size={22} className="text-success" />
-                </div>
-                <div className="stat-value">{stats.resolved_issues}</div>
-                <small className="text-success mt-2">Active Resolutions</small>
-              </div>
-            </Col>
-
-            <Col md={4}>
-              <div className="stat-card">
-                <div className="stat-header">
-                  <span className="stat-title">Pending Tasks</span>
-                  <Clock size={22} className="text-danger" />
-                </div>
-                <div className="stat-value">{stats.pending_issues}</div>
-                <small className="text-danger mt-2">Requires attention</small>
-              </div>
-            </Col>
+            <Col md={4}><div className="stat-card"><div className="stat-header"><span className="stat-title">Total Issues Reported</span><AlertTriangle size={22} className="text-warning" /></div><div className="stat-value">{stats.total_issues}</div><small className="text-muted mt-2">All time reports</small></div></Col>
+            <Col md={4}><div className="stat-card"><div className="stat-header"><span className="stat-title">Issues Resolved</span><CheckCircle size={22} className="text-success" /></div><div className="stat-value">{stats.resolved_issues}</div><small className="text-success mt-2">Active Resolutions</small></div></Col>
+            <Col md={4}><div className="stat-card"><div className="stat-header"><span className="stat-title">Pending Tasks</span><Clock size={22} className="text-danger" /></div><div className="stat-value">{stats.pending_issues}</div><small className="text-danger mt-2">Requires attention</small></div></Col>
           </Row>
-
-          {/* 2. Charts Section Layout */}
+          {/* Charts Placeholder (Same as before) */}
           <Row className="g-4">
-            <Col lg={8}>
-              <Card className="border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
-                <Card.Body>
-                  <div className="d-flex justify-content-between align-items-center mb-4">
-                    <h5 className="fw-bold mb-0 text-dark">Complaint Trends</h5>
-                    <select className="form-select form-select-sm" style={{ width: '120px' }}>
-                      <option>This Week</option>
-                      <option>This Month</option>
-                    </select>
-                  </div>
-                  <div className="d-flex align-items-center justify-content-center bg-light rounded" style={{ height: '300px' }}>
-                    <span className="text-muted">Chart: Issue Frequency vs Time</span>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-
-            <Col lg={4}>
-              <Card className="border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}>
-                <Card.Body>
-                  <h5 className="fw-bold mb-4 text-dark">Satisfaction Rates</h5>
-                 
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-between mb-1">
-                      <span>Issue Resolution</span>
-                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
-                    </div>
-                    <ProgressBar now={stats.satisfaction_rate} variant="success" style={{ height: '8px' }} />
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-between mb-1">
-                      <span>Response Time</span>
-                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
-                    </div>
-                    <ProgressBar now={stats.satisfaction_rate} variant="warning" style={{ height: '8px' }} />
-                  </div>
-
-                  <div className="mb-4">
-                    <div className="d-flex justify-content-between mb-1">
-                      <span>Community Feedback</span>
-                      <span className="fw-bold">{stats.satisfaction_rate}%</span>
-                    </div>
-                    <ProgressBar now={stats.satisfaction_rate} variant="info" style={{ height: '8px' }} />
-                  </div>
-                 
-                  <div className="text-center mt-auto">
-                    <small className="text-muted">Based on post-resolution surveys</small>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
+            <Col lg={8}><Card className="border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}><Card.Body><h5 className="fw-bold mb-4 text-dark">Complaint Trends</h5><div className="d-flex align-items-center justify-content-center bg-light rounded" style={{ height: '300px' }}><span className="text-muted">Chart: Issue Frequency vs Time</span></div></Card.Body></Card></Col>
+            <Col lg={4}><Card className="border-0 shadow-sm h-100" style={{ borderRadius: '12px' }}><Card.Body><h5 className="fw-bold mb-4 text-dark">Satisfaction Rates</h5><div className="text-center mt-auto"><small className="text-muted">Based on post-resolution surveys</small></div></Card.Body></Card></Col>
           </Row>
-
         </Container>
       </main>
     </div>
   );
 }
-
 export default AuthorityDashboard;

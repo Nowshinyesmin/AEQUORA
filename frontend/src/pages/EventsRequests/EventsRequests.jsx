@@ -3,13 +3,14 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Calendar, Vote, Siren, 
-  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle, User // <--- Added User icon
+  LogOut, Plus, MapPin, Clock, CheckCircle, XCircle, User, Bell 
 } from "lucide-react";
 import { Modal, Button, Form, Badge } from "react-bootstrap";
 import { api } from "../../api/client"; 
 import "./EventsRequests.css";
+import "../AuthorityDashboard/AuthorityDashboard.css"; 
 
-// --- Authority Sidebar (Now fetches data dynamically) ---
+// --- Authority Sidebar (Kept exactly as is) ---
 const AuthoritySidebar = () => {
   const navigate = useNavigate();
   const [userInfo, setUserInfo] = useState({
@@ -67,7 +68,6 @@ const AuthoritySidebar = () => {
         <Link to="/authority/sos" className="nav-link-custom" style={{ color: '#ef4444' }}>
           <Siren size={20} className="nav-icon" />Emergency SOS
         </Link>
-        {/* --- Added Profile Link --- */}
         <Link to="/authority/profile" className="nav-link-custom">
           <User size={20} className="nav-icon" />Profile
         </Link>
@@ -83,11 +83,15 @@ const AuthoritySidebar = () => {
 
 // --- Main Component ---
 const EventsRequests = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("active");
   const [events, setEvents] = useState([]); 
   const [requests, setRequests] = useState([]); 
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Notification Count State
+  const [notifCount, setNotifCount] = useState(0);
 
   // Form State for New Event
   const [newEvent, setNewEvent] = useState({
@@ -99,7 +103,6 @@ const EventsRequests = () => {
     description: ""
   });
 
-  // Fetch Data on Load
   useEffect(() => {
     fetchData();
   }, []);
@@ -107,12 +110,14 @@ const EventsRequests = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const [eventsRes, requestsRes] = await Promise.all([
+      const [eventsRes, requestsRes, notifRes] = await Promise.all([
          api.get('authority/events/'),
-         api.get('authority/events/requests/')
+         api.get('authority/events/requests/'),
+         api.get('authority/notifications/')
       ]);
       setEvents(eventsRes.data);
       setRequests(requestsRes.data);
+      setNotifCount(notifRes.data.unread_count);
     } catch (error) {
       console.error("Error fetching data:", error);
     } finally {
@@ -125,7 +130,7 @@ const EventsRequests = () => {
     try {
       await api.post('authority/events/', newEvent);
       setShowCreateModal(false);
-      fetchData(); // Refresh list
+      fetchData(); 
       setNewEvent({ title: "", date: "", time: "", location: "", category: "Community", description: "" });
     } catch (error) {
       console.error("Error creating event:", error);
@@ -136,7 +141,7 @@ const EventsRequests = () => {
   const handleRequestAction = async (eventId, action) => {
     try {
       await api.post(`authority/events/${eventId}/action/`, { action });
-      fetchData(); // Refresh lists
+      fetchData(); 
     } catch (error) {
       console.error(`Error ${action}ing event:`, error);
       alert(`Failed to ${action} event.`);
@@ -158,15 +163,31 @@ const EventsRequests = () => {
       <AuthoritySidebar />
       <main className="main-content">
         
-        {/* Header */}
-        <div className="page-header">
+        {/* Header - MODIFIED: Bell is now inside a flex container with the Button */}
+        <div className="page-header d-flex justify-content-between align-items-start">
           <div className="page-title">
             <h1>Events & Requests</h1>
             <div className="page-subtitle">Manage community announcements and approve resident requests</div>
           </div>
-          <Button variant="primary" onClick={() => setShowCreateModal(true)} className="d-flex align-items-center gap-2">
-            <Plus size={18} /> Post New Event
-          </Button>
+          
+          {/* Action Area: Bell + Button */}
+          <div className="d-flex align-items-center gap-4">
+            
+            {/* Notification Bell */}
+            <div 
+              className="notification-wrapper position-relative" 
+              onClick={() => navigate('/authority/notifications')}
+              style={{ cursor: 'pointer' }}
+            >
+              <Bell size={24} className="text-secondary" />
+              {notifCount > 0 && <span className="notification-badge">{notifCount}</span>}
+            </div>
+
+            {/* Post New Event Button */}
+            <Button variant="primary" onClick={() => setShowCreateModal(true)} className="d-flex align-items-center gap-2">
+              <Plus size={18} /> Post New Event
+            </Button>
+          </div>
         </div>
 
         {/* Tabs */}

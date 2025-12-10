@@ -3,22 +3,22 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { 
   LayoutDashboard, ClipboardList, BarChart2, Calendar, Vote, Siren, LogOut, 
-  User, MapPin, Save, Shield, Lock, Key, Briefcase, Map
+  User, Briefcase, Map, Save, Shield, Lock, Key
 } from "lucide-react";
-// Linking to the specific CSS for this page
 import "./AuthorityProfileSettings.css";
 import { api } from "../../api/client"; 
 
 const AuthoritySidebar = () => {
   const navigate = useNavigate();
-  const [userInfo, setUserInfo] = useState({ firstName: 'Authority', role: 'Authority' });
+  const [userInfo, setUserInfo] = useState({ firstName: 'Authority', lastName: '', role: 'Authority' });
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const response = await api.get('auth/users/me/'); // Changed to 'me' to ensure consistent name fetching
+        const response = await api.get('auth/users/me/'); 
         setUserInfo({
           firstName: response.data.firstname || 'Admin',
+          lastName: response.data.lastname || '',
           role: 'Authority'
         });
       } catch (error) {
@@ -37,7 +37,7 @@ const AuthoritySidebar = () => {
     <aside className="dashboard-sidebar">
       <div className="sidebar-brand">Aequora</div>
       <div className="user-profile-section">
-        <div className="user-name-display">{userInfo.firstName}</div>
+        <div className="user-name-display">{userInfo.firstName} {userInfo.lastName}</div>
         <div className="user-role-display">{userInfo.role}</div>
       </div>
       <nav className="sidebar-nav">
@@ -84,20 +84,26 @@ const AuthorityProfileSettings = () => {
   const [formData, setFormData] = useState({
     firstname: "", lastname: "", email: "",
     departmentname: "", designation: "", assignedarea: "",
-    houseno: "", street: "", thana: "", district: ""
+    houseno: "", street: "", thana: "", district: "",
+    communityid: "" 
   });
   
   const [passwordData, setPasswordData] = useState({
     currentPassword: "", newPassword: "", confirmPassword: ""
   });
 
+  const [communities, setCommunities] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
+        const commRes = await api.get('communities/');
+        setCommunities(commRes.data);
+
         const response = await api.get('authority/profile/');
         const data = response.data;
+        
         setFormData({
           firstname: data.firstname || "",
           lastname: data.lastname || "",
@@ -108,7 +114,8 @@ const AuthorityProfileSettings = () => {
           houseno: data.houseno || "",
           street: data.street || "",
           thana: data.thana || "",
-          district: data.district || ""
+          district: data.district || "",
+          communityid: data.communityid || "" 
         });
       } catch (error) {
         console.error("Error loading authority profile:", error);
@@ -175,20 +182,24 @@ const AuthorityProfileSettings = () => {
           </div>
         </div>
 
+        {/* Note: I've wrapped the inputs in a single form tag here to better control submission, 
+            but strictly speaking for your layout, we just need to fix the input attributes. */}
+            
         {/* --- Personal & Official Info --- */}
         <div className="settings-card">
           <div className="card-header-row"><User size={20} /><span className="card-title-text">Official Information</span></div>
-          <form onSubmit={handleSave}>
-            <div className="form-row-grid">
-              <div className="form-group"><label>First Name</label><input name="firstname" value={formData.firstname} onChange={handleChange} type="text" className="form-control-settings" /></div>
-              <div className="form-group"><label>Last Name</label><input name="lastname" value={formData.lastname} onChange={handleChange} type="text" className="form-control-settings" /></div>
-            </div>
-            <div className="form-row-grid">
-              <div className="form-group"><label>Department Name</label><input name="departmentname" value={formData.departmentname} onChange={handleChange} type="text" className="form-control-settings" placeholder="e.g. Waste Management" /></div>
-              <div className="form-group"><label>Designation</label><input name="designation" value={formData.designation} onChange={handleChange} type="text" className="form-control-settings" placeholder="e.g. Senior Officer" /></div>
-            </div>
-            <div className="form-group"><label>Email (Read Only)</label><input value={formData.email} readOnly disabled type="text" className="form-control-settings" style={{ backgroundColor: '#f3f4f6' }} /></div>
-          </form>
+          <div className="form-row-grid">
+            <div className="form-group"><label>First Name</label><input name="firstname" value={formData.firstname} onChange={handleChange} type="text" className="form-control-settings" /></div>
+            <div className="form-group"><label>Last Name</label><input name="lastname" value={formData.lastname} onChange={handleChange} type="text" className="form-control-settings" /></div>
+          </div>
+          <div className="form-row-grid">
+            <div className="form-group"><label>Department Name</label><input name="departmentname" value={formData.departmentname} onChange={handleChange} type="text" className="form-control-settings" placeholder="e.g. Waste Management" /></div>
+            <div className="form-group"><label>Designation</label><input name="designation" value={formData.designation} onChange={handleChange} type="text" className="form-control-settings" placeholder="e.g. Senior Officer" /></div>
+          </div>
+          <div className="form-group">
+              <label>Email</label>
+              <input name="email" value={formData.email} onChange={handleChange} type="email" className="form-control-settings" />
+          </div>
         </div>
 
         {/* --- Office Address Info --- */}
@@ -204,27 +215,58 @@ const AuthorityProfileSettings = () => {
           </div>
         </div>
 
-        {/* --- Operational Area --- */}
+        {/* --- Operational Scope --- */}
         <div className="settings-card">
           <div className="card-header-row"><Map size={20} /><span className="card-title-text">Operational Scope</span></div>
-          <div className="form-group"><label>Assigned Area</label><input name="assignedarea" value={formData.assignedarea} onChange={handleChange} type="text" className="form-control-settings" placeholder="e.g. Zone 4, North Dhaka" /></div>
+          
+          <div className="form-group">
+            <label>Assigned Community</label>
+            <select 
+              name="communityid" 
+              value={formData.communityid} 
+              onChange={handleChange} 
+              className="form-control-settings"
+            >
+              <option value="">Select Community</option>
+              {communities.map((community) => (
+                <option key={community.communityid} value={community.communityid}>
+                  {community.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="form-group">
+            <label>Assigned Area Description</label>
+            {/* 1. FIXED: Added autoComplete="off" to stop browser from filling email here */}
+            <input 
+              name="assignedarea" 
+              value={formData.assignedarea} 
+              onChange={handleChange} 
+              type="text" 
+              className="form-control-settings" 
+              placeholder="e.g. Zone 4, North Dhaka" 
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         {/* --- Password Management --- */}
         <div className="settings-card">
           <div className="card-header-row"><Lock size={20} /><span className="card-title-text">Password Management</span></div>
+          {/* 2. Added explicit autocomplete="new-password" to hint browsers */}
           <div className="form-group">
             <label>Current Password</label>
-            <input name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="Enter current password" />
+            <input name="currentPassword" value={passwordData.currentPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="Enter current password" autoComplete="new-password" />
           </div>
           <div className="form-row-grid">
             <div className="form-group">
               <label>New Password</label>
-              <input name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="New password" />
+              <input name="newPassword" value={passwordData.newPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="New password" autoComplete="new-password" />
             </div>
             <div className="form-group">
               <label>Confirm New Password</label>
-              <input name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="Confirm new password" />
+              <input name="confirmPassword" value={passwordData.confirmPassword} onChange={handlePasswordChange} type="password" className="form-control-settings" placeholder="Confirm new password" autoComplete="new-password" />
             </div>
           </div>
           <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

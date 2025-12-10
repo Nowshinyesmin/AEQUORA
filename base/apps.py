@@ -5,5 +5,5 @@ class BaseConfig(AppConfig):
     name = 'base'
 
     def ready(self):
-        # I have uncommented this so the signals.py file actually runs now
+        # Importing signals here ensures they are registered when Django starts
         import base.signals

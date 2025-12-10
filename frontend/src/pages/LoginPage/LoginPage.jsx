@@ -54,7 +54,6 @@ function LoginPage() {
       } else if (data.role === 'Authority') {
         targetPath = AUTHORITY_DASHBOARD_PATH;
       } else if (data.role === 'Admin') {
-        // NEW: hard-coded admin route
         targetPath = ADMIN_DASHBOARD_PATH;
       }
 
@@ -106,6 +105,7 @@ function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="form-control-custom"
+                  autoComplete="email" 
                 />
               </Form.Group>
 
@@ -118,6 +118,7 @@ function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="form-control-custom"
+                  autoComplete="current-password"
                 />
               </Form.Group>
 

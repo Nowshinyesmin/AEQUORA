@@ -214,7 +214,10 @@ const AuthorityEmergency = () => {
           <Link to="/authority/analytics" className="nav-link-custom"><BarChart2 size={20} className="nav-icon" /> Analytics & Reports</Link>
           <Link to="/authority/events" className="nav-link-custom"><Calendar size={20} className="nav-icon" /> Events & Requests</Link>
           <Link to="/authority/voting" className="nav-link-custom"><Vote size={20} className="nav-icon" /> Community Voting</Link>
-          <Link to="/authority/sos" className="nav-link-custom text-danger active-danger"><Siren size={20} className="nav-icon" /> Emergency SOS</Link>
+          
+          {/* --- FIX: UPDATED LINK TO /authority/emergency --- */}
+          <Link to="/authority/emergency" className="nav-link-custom text-danger active-danger"><Siren size={20} className="nav-icon" /> Emergency SOS</Link>
+          
           <Link to="/authority/profile" className="nav-link-custom"><User size={20} className="nav-icon" /> Profile</Link>
         </nav>
         <div className="sidebar-footer">

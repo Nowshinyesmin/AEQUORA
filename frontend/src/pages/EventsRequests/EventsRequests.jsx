@@ -65,9 +65,12 @@ const AuthoritySidebar = () => {
         <Link to="/authority/voting" className="nav-link-custom">
           <Vote size={20} className="nav-icon" />Community Voting
         </Link>
-        <Link to="/authority/sos" className="nav-link-custom" style={{ color: '#ef4444' }}>
+        
+        {/* --- FIXED LINK BELOW --- */}
+        <Link to="/authority/emergency" className="nav-link-custom" style={{ color: '#ef4444' }}>
           <Siren size={20} className="nav-icon" />Emergency SOS
         </Link>
+        
         <Link to="/authority/profile" className="nav-link-custom">
           <User size={20} className="nav-icon" />Profile
         </Link>

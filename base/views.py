@@ -1051,32 +1051,58 @@ class BookingDetailView(generics.DestroyAPIView):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 # ==========================================
-#  AUTHORITY & SHARED VIEWS
+#  AUTHORITY & SHARED VIEWS (UPDATED FOR FILTERING)
 # ==========================================
 
 class AuthorityDashboardStatsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        total_issues = Issuereport.objects.count()
-        resolved_issues = Issuereport.objects.filter(
-            status='Resolved'
-        ).count()
-        pending_issues = Issuereport.objects.exclude(
-            status='Resolved'
-        ).count()
+        try:
+            # 1. Get Community context
+            user_email = UserEmail.objects.get(email=request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            # Identify Community either from AuthorityCommunity or User Profile
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
 
-        avg_rating = Review.objects.aggregate(
-            Avg('rating')
-        )['rating__avg'] or 0
-        satisfaction_rate = round((avg_rating / 5) * 100, 1)
+            if not target_community:
+                return Response({"total_issues": 0, "resolved_issues": 0, "pending_issues": 0, "satisfaction_rate": 0})
 
-        return Response({
-            "total_issues": total_issues,
-            "resolved_issues": resolved_issues,
-            "pending_issues": pending_issues,
-            "satisfaction_rate": satisfaction_rate
-        })
+            # 2. Filter Stats by Community
+            total_issues = Issuereport.objects.filter(communityid=target_community).count()
+            
+            resolved_issues = Issuereport.objects.filter(
+                communityid=target_community,
+                status='Resolved'
+            ).count()
+            
+            pending_issues = Issuereport.objects.filter(communityid=target_community).exclude(
+                status='Resolved'
+            ).count()
+
+            # Avg rating of bookings in THIS community
+            avg_rating = Review.objects.filter(
+                bookingid__communityid=target_community
+            ).aggregate(Avg('rating'))['rating__avg'] or 0
+            
+            satisfaction_rate = round((avg_rating / 5) * 100, 1)
+
+            return Response({
+                "total_issues": total_issues,
+                "resolved_issues": resolved_issues,
+                "pending_issues": pending_issues,
+                "satisfaction_rate": satisfaction_rate
+            })
+
+        except Exception:
+             return Response({"total_issues": 0, "resolved_issues": 0, "pending_issues": 0, "satisfaction_rate": 0})
 
 
 class AuthorityIssueListView(generics.ListAPIView):
@@ -1084,9 +1110,35 @@ class AuthorityIssueListView(generics.ListAPIView):
     serializer_class = AuthorityIssueSerializer
 
     def get_queryset(self):
-        return Issuereport.objects.annotate(
-            vote_count=Count('issuevote')
-        ).order_by('-createdat')
+        try:
+            # 1. Identify the logged-in user
+            user_email = UserEmail.objects.get(email=self.request.user.email)
+            
+            # 2. Get the Authority profile
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            # 3. Find the specific Community ID for this Authority
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            # Fallback: Check the User table directly
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
+            
+            # 4. Filter the Issues by that Community ID
+            if target_community:
+                return Issuereport.objects.filter(
+                    communityid=target_community
+                ).annotate(
+                    vote_count=Count('issuevote')
+                ).order_by('-createdat')
+            
+            return Issuereport.objects.none()
+
+        except (UserEmail.DoesNotExist, Authority.DoesNotExist):
+            return Issuereport.objects.none()
 
 
 class AuthorityIssueDetailView(APIView):
@@ -1133,65 +1185,131 @@ class AnalyticsSummaryView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        total = Issuereport.objects.count()
+        try:
+            # 1. Identify User and Community
+            user_email = UserEmail.objects.get(email=request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
 
-        resolved_issues = Issuereport.objects.filter(
-            status='Resolved',
-            resolvedat__isnull=False
-        )
+            # If no community found, return empty stats
+            if not target_community:
+                 return Response({
+                    "totalReports": 0,
+                    "avgResolutionTime": "0h 0m",
+                    "satisfactionScore": 0,
+                    "categoryStats": [],
+                    "topAreas": []
+                })
 
-        total_seconds = 0
-        count = 0
-        for i in resolved_issues:
-            if i.createdat and i.resolvedat:
-                diff = i.resolvedat - i.createdat
-                total_seconds += diff.total_seconds()
-                count += 1
+            # 2. Filter Total Reports
+            total = Issuereport.objects.filter(communityid=target_community).count()
 
-        avg_time_str = "0h 0m"
-        if count > 0:
-            avg_seconds = total_seconds / count
-            hours = int(avg_seconds // 3600)
-            avg_time_str = f"{hours} hrs"
+            # 3. Filter Resolved Issues for Time Calculation
+            resolved_issues = Issuereport.objects.filter(
+                communityid=target_community,
+                status='Resolved',
+                resolvedat__isnull=False
+            )
 
-        avg_score = Review.objects.aggregate(
-            Avg('rating')
-        )['rating__avg'] or 0
+            total_seconds = 0
+            count = 0
+            for i in resolved_issues:
+                if i.createdat and i.resolvedat:
+                    diff = i.resolvedat - i.createdat
+                    total_seconds += diff.total_seconds()
+                    count += 1
 
-        cat_stats = Issuereport.objects.values('type').annotate(
-            count=Count('issueid')
-        ).order_by('-count')
-        formatted_cats = [
-            {'name': c['type'] or 'Uncategorized', 'count': c['count']}
-            for c in cat_stats
-        ]
+            avg_time_str = "0h 0m"
+            if count > 0:
+                avg_seconds = total_seconds / count
+                hours = int(avg_seconds // 3600)
+                avg_time_str = f"{hours} hrs"
 
-        area_stats = Issuereport.objects.values('mapaddress').annotate(
-            count=Count('issueid')
-        ).order_by('-count')[:5]
-        formatted_areas = [
-            {'name': a['mapaddress'] or 'Unknown', 'count': a['count']}
-            for a in area_stats
-        ]
+            # 4. Filter Reviews (Review -> Booking -> Community)
+            avg_score = Review.objects.filter(
+                bookingid__communityid=target_community
+            ).aggregate(Avg('rating'))['rating__avg'] or 0
 
-        return Response({
-            "totalReports": total,
-            "avgResolutionTime": avg_time_str,
-            "satisfactionScore": round(avg_score, 1),
-            "categoryStats": formatted_cats,
-            "topAreas": formatted_areas
-        })
+            # 5. Filter Categories
+            cat_stats = Issuereport.objects.filter(
+                communityid=target_community
+            ).values('type').annotate(
+                count=Count('issueid')
+            ).order_by('-count')
+            formatted_cats = [
+                {'name': c['type'] or 'Uncategorized', 'count': c['count']}
+                for c in cat_stats
+            ]
+
+            # 6. Filter Top Areas
+            area_stats = Issuereport.objects.filter(
+                communityid=target_community
+            ).values('mapaddress').annotate(
+                count=Count('issueid')
+            ).order_by('-count')[:5]
+            formatted_areas = [
+                {'name': a['mapaddress'] or 'Unknown', 'count': a['count']}
+                for a in area_stats
+            ]
+
+            return Response({
+                "totalReports": total,
+                "avgResolutionTime": avg_time_str,
+                "satisfactionScore": round(avg_score, 1),
+                "categoryStats": formatted_cats,
+                "topAreas": formatted_areas
+            })
+            
+        except Exception as e:
+            # Just in case of error, return empty/safe data
+            return Response({
+                "totalReports": 0,
+                "avgResolutionTime": "0h 0m",
+                "satisfactionScore": 0,
+                "categoryStats": [],
+                "topAreas": []
+            })
 
 
 class AuthoritySOSView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        sos_list = Emergencyreport.objects.all().order_by('-timestamp')
-        serializer = AuthoritySOSSerializer(sos_list, many=True)
-        return Response(serializer.data)
+        try:
+            # 1. Identify User and Authority
+            user_email = UserEmail.objects.get(email=request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            # 2. Find Community ID
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
 
+            # 3. Filter Emergency Reports
+            if target_community:
+                sos_list = Emergencyreport.objects.filter(
+                    communityid=target_community
+                ).order_by('-timestamp')
+                
+                serializer = AuthoritySOSSerializer(sos_list, many=True)
+                return Response(serializer.data)
+            
+            return Response([])
 
+        except (UserEmail.DoesNotExist, Authority.DoesNotExist):
+            return Response([])
+
+# --- AuthoritySOSDetailView handles PATCH (status) and POST (dispatch) ---
 class AuthoritySOSDetailView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -1205,7 +1323,55 @@ class AuthoritySOSDetailView(APIView):
             return Response({'error': 'Not found'}, status=404)
 
     def post(self, request, pk):
-        return Response({'message': 'Units Dispatched Successfully'})
+        """
+        Handles Dispatch Logic.
+        1. Identifies the Service Type (Police, Fire, Ambulance).
+        2. Finds Authorities in the same Community with matching Department names.
+        3. Sends a notification specifically to them.
+        """
+        service_type = request.data.get('service', '').upper() # e.g., 'FIRE DEPT', 'AMBULANCE'
+        
+        try:
+            sos = Emergencyreport.objects.get(pk=pk)
+            community = sos.communityid
+            
+            # Map Service Type to Department Keywords
+            dept_keyword = ""
+            if "FIRE" in service_type:
+                dept_keyword = "Fire"
+            elif "AMBULANCE" in service_type or "MEDICAL" in service_type:
+                dept_keyword = "Medical" # or Health
+            elif "POLICE" in service_type:
+                dept_keyword = "Police" # or Security
+            
+            # Find relevant Authorities in this community
+            if dept_keyword:
+                target_authorities = Authority.objects.filter(
+                    userid__communityid=community,
+                    departmentname__icontains=dept_keyword
+                )
+                
+                # Create Notifications
+                notifs = []
+                for auth in target_authorities:
+                    notifs.append(Notification(
+                        userid=auth.userid,
+                        communityid=community,
+                        message=f"DISPATCH ALERT: You have been assigned to an SOS at {sos.location}.",
+                        type="sos",
+                        link="/authority/emergency"
+                    ))
+                
+                if notifs:
+                    Notification.objects.bulk_create(notifs)
+                    print(f"--- DEBUG: Notified {len(notifs)} authorities in {dept_keyword} department ---")
+
+            return Response({'message': f'{service_type} Units Dispatched Successfully'})
+            
+        except Emergencyreport.DoesNotExist:
+            return Response({'error': 'SOS Report not found'}, status=404)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
 
 
 class VotingResultsView(generics.ListAPIView):
@@ -1213,52 +1379,118 @@ class VotingResultsView(generics.ListAPIView):
     serializer_class = AuthorityIssueSerializer
 
     def get_queryset(self):
-        return Issuereport.objects.annotate(
-            upvotes=Count('issuevote', filter=Q(issuevote__votetype='up')),
-            downvotes=Count('issuevote', filter=Q(issuevote__votetype='down'))
-        ).order_by('-upvotes')
+        try:
+            # 1. Identify User and Community
+            user_email = UserEmail.objects.get(email=self.request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
+
+            # 2. Filter Issues by Community + Count Votes
+            if target_community:
+                return Issuereport.objects.filter(
+                    communityid=target_community
+                ).annotate(
+                    upvotes=Count('issuevote', filter=Q(issuevote__votetype='up')),
+                    downvotes=Count('issuevote', filter=Q(issuevote__votetype='down'))
+                ).order_by('-upvotes')
+
+            return Issuereport.objects.none()
+
+        except Exception:
+            return Issuereport.objects.none()
 
 
 class AuthorityEventView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        events = Event.objects.filter(
-            status='Published'
-        ).order_by('-date')
-        serializer = AuthorityEventSerializer(events, many=True)
-        return Response(serializer.data)
+        try:
+            # 1. Identify Community
+            user_email = UserEmail.objects.get(email=request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
+            
+            # 2. Filter Events by Community
+            if target_community:
+                events = Event.objects.filter(
+                    communityid=target_community,
+                    status='Published'
+                ).order_by('-date')
+                serializer = AuthorityEventSerializer(events, many=True)
+                return Response(serializer.data)
+                
+            return Response([])
+
+        except Exception:
+             return Response([])
 
     def post(self, request):
         data = request.data
-        user_email = UserEmail.objects.get(email=request.user.email)
-        community = user_email.userid.communityid
-        if not community:
-            community = Community.objects.first()
+        try:
+            user_email = UserEmail.objects.get(email=request.user.email)
+            # Use the robust community lookup here too if you want, 
+            # but usually the user's direct communityid is fine for creation.
+            community = user_email.userid.communityid
+            if not community:
+                community = Community.objects.first()
 
-        Event.objects.create(
-            postedbyid=user_email.userid,
-            communityid=community,
-            title=data.get('title'),
-            description=data.get('description'),
-            date=data.get('date'),
-            time=data.get('time'),
-            location=data.get('location'),
-            category=data.get('category'),
-            status='Published'
-        )
-        return Response({'message': 'Event Created'}, status=201)
+            Event.objects.create(
+                postedbyid=user_email.userid,
+                communityid=community,
+                title=data.get('title'),
+                description=data.get('description'),
+                date=data.get('date'),
+                time=data.get('time'),
+                location=data.get('location'),
+                category=data.get('category'),
+                status='Published'
+            )
+            return Response({'message': 'Event Created'}, status=201)
+        except Exception as e:
+            return Response({'error': str(e)}, status=400)
 
 
 class AuthorityEventRequestsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def get(self, request):
-        requests = Event.objects.filter(
-            status='Pending'
-        ).order_by('-date')
-        serializer = AuthorityEventSerializer(requests, many=True)
-        return Response(serializer.data)
+        try:
+            # 1. Identify Community
+            user_email = UserEmail.objects.get(email=request.user.email)
+            authority = Authority.objects.get(userid=user_email.userid)
+            
+            auth_comm = Authoritycommunity.objects.filter(authorityid=authority).first()
+            target_community = None
+            if auth_comm:
+                target_community = auth_comm.communityid
+            elif user_email.userid.communityid:
+                target_community = user_email.userid.communityid
+
+            # 2. Filter Pending Requests by Community
+            if target_community:
+                requests = Event.objects.filter(
+                    communityid=target_community,
+                    status='Pending'
+                ).order_by('-date')
+                serializer = AuthorityEventSerializer(requests, many=True)
+                return Response(serializer.data)
+
+            return Response([])
+
+        except Exception:
+             return Response([])
 
 
 class AuthorityEventActionView(APIView):
@@ -1574,8 +1806,6 @@ class ProviderBookingManageView(APIView):
         serializer = ProviderBookingSerializer(bookings, many=True)
         return Response(serializer.data)
 
-# base/views.py
-
 class ProviderBookingStatusUpdateView(generics.UpdateAPIView):
     serializer_class = ProviderBookingSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -1837,7 +2067,6 @@ class BkashQueryPaymentView(APIView):
         response = requests.get(query_url, headers=headers)
         return Response(response.json())
     
-#SAYEDA NUSRAT
 
 class AuthorityProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
@@ -1866,77 +2095,3 @@ class AuthorityProfileView(APIView):
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-
-# FOR AUTHORITY NOTIFICATION BY SAYEDA NUSRAT
-
-class AuthoritySOSDetailView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def patch(self, request, pk):
-        try:
-            sos = Emergencyreport.objects.get(pk=pk)
-            sos.status = request.data.get('status', sos.status)
-            sos.save()
-            return Response({'status': 'success'})
-        except Emergencyreport.DoesNotExist:
-            return Response({'error': 'Not found'}, status=404)
-
-    def post(self, request, pk):
-        """
-        Handles Dispatch Logic.
-        1. Identifies the Service Type (Police, Fire, Ambulance).
-        2. Finds Authorities in the same Community with matching Department names.
-        3. Sends a notification specifically to them.
-        """
-        service_type = request.data.get('service', '').upper() # e.g., 'FIRE DEPT', 'AMBULANCE'
-        
-        try:
-            sos = Emergencyreport.objects.get(pk=pk)
-            community = sos.communityid
-            
-            # Map Service Type to Department Keywords
-            dept_keyword = ""
-            if "FIRE" in service_type:
-                dept_keyword = "Fire"
-            elif "AMBULANCE" in service_type or "MEDICAL" in service_type:
-                dept_keyword = "Medical" # or Health
-            elif "POLICE" in service_type:
-                dept_keyword = "Police" # or Security
-            
-            # Find relevant Authorities in this community
-            if dept_keyword:
-                target_authorities = Authority.objects.filter(
-                    userid__communityid=community,
-                    departmentname__icontains=dept_keyword
-                )
-                
-                # Create Notifications
-                notifs = []
-                for auth in target_authorities:
-                    notifs.append(Notification(
-                        userid=auth.userid,
-                        communityid=community,
-                        message=f"DISPATCH ALERT: You have been assigned to an SOS at {sos.location}.",
-                        type="sos",
-                        link="/authority/emergency" # <--- FIXED: Correct Link
-                    ))
-                
-                if notifs:
-                    Notification.objects.bulk_create(notifs)
-                    print(f"--- DEBUG: Notified {len(notifs)} authorities in {dept_keyword} department ---")
-
-            return Response({'message': f'{service_type} Units Dispatched Successfully'})
-            
-        except Emergencyreport.DoesNotExist:
-            return Response({'error': 'SOS Report not found'}, status=404)
-        except Exception as e:
-            return Response({'error': str(e)}, status=400)
-
-# ----------------------------------------------------------------------
-#  END CORRECTED CLASS
-# ----------------------------------------------------------------------
-
-# ... (Keep the rest of your views: VotingResultsView, AuthorityEventView, AuthorityEventRequestsView, etc.) ...
-# ... (Keep NotificationView, Provider Views, Payment Views) ...
